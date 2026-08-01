@@ -48,11 +48,13 @@ NexusTwin proves the answer is **yes**.
 
 ## Live Demo
 
-A live demonstration of NexusTwin is available. The demo uses the **UCI AI4I 2020 Predictive Maintenance Dataset** (10,000 real manufacturing machine records) to power the visualization and AI predictions.
+**[Launch Live Demo →](https://studio-public-demos.github.io/nexustwin-industrial-digital-twin/)**
 
-> **Demo access and deployment options available upon request.**
+The live demo uses the **UCI AI4I 2020 Predictive Maintenance Dataset** (10,000 real manufacturing machine records) to power the 3D visualization, AI predictions, and analytics dashboard. No installation required — runs entirely in your browser.
+
+> **Demo access available immediately at the link above.**
 >
-> Contact NebulaCloud Studio to schedule a guided walkthrough or discuss deploying a customized instance for your organization.
+> For a guided walkthrough or to discuss deploying a customized instance for your organization, contact NebulaCloud Studio.
 
 ---
 
@@ -64,30 +66,30 @@ A live demonstration of NexusTwin is available. The demo uses the **UCI AI4I 202
 
 ## Project Screenshots
 
-### Full Dashboard View
-The complete NexusTwin interface showing the 3D manufacturing floor, machine list, KPI cards, failure distribution chart, and sensor trends.
+### Full Dashboard
+The complete NexusTwin interface showing the 3D manufacturing floor, machine list with status indicators, KPI cards (machines, failure risk, tool wear, uptime), failure distribution donut chart, and sensor trends line chart.
 
-*[Screenshot: Full Dashboard]*
+![Full Dashboard](assets/screenshots/01-dashboard.png)
 
 ### Machine Inspector
-Clicking any machine opens a detailed inspector panel with live sensor readings (air temperature, process temperature, RPM, torque, tool wear, power), maintenance schedule, and AI failure risk prediction.
+Clicking any machine in the sidebar or 3D view opens a detailed inspector panel with live sensor readings (air temperature, process temperature, RPM, torque, tool wear, power), maintenance schedule, and AI failure risk prediction with actionable recommendations.
 
-*[Screenshot: Machine Inspector]*
+![Machine Inspector](assets/screenshots/02-machine-inspector.png)
 
-### 3D Scene — Status Indicators
-Color-coded status rings on each machine: green (normal), amber (warning), red (critical). Spindles rotate at speed proportional to real RPM data. Particle effects on machines with elevated temperature.
+### Analytics Tab
+Dedicated analytics view with full-height charts: failure distribution donut (5 failure modes from real UCI data), risk assessment bar chart (8 machines ranked by failure probability), and 24-hour sensor trend line chart (air temp, process temp, tool wear).
 
-*[Screenshot: 3D Status Rings]*
+![Analytics View](assets/screenshots/03-analytics.png)
 
-### Analytics View
-Dedicated analytics tab with full-height failure distribution donut chart, risk assessment bar chart, and sensor trend line chart — all driven by real UCI dataset values.
+### Walk Mode & VR Ready
+First-person walk mode (WASD + mouse) for exploring the factory floor at human scale. When a VR headset is connected, the button switches to "ENTER VR" for immersive WebXR experience with dual controllers and teleport locomotion.
 
-*[Screenshot: Analytics Tab]*
+![Walk Mode](assets/screenshots/04-walk-mode.png)
 
-### Walk Mode
-First-person navigation mode (WASD + mouse) for exploring the factory floor at human scale. VR mode available with WebXR-compatible headsets.
+### 3D Scene Close-Up
+Color-coded status rings on each machine: green (normal), amber (warning), red (critical). Spindles rotate at speed proportional to real RPM sensor data. Particle effects rise from machines with elevated temperature. Building shell with transparent walls.
 
-*[Screenshot: Walk Mode]*
+![3D Close-Up](assets/screenshots/05-3d-closeup.png)
 
 ---
 
