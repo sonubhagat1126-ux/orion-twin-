@@ -310,7 +310,17 @@ NexusTwin demonstrates Studio's capability to rapidly prototype sophisticated di
 
 ## Related Project Showcases
 
-- *[Additional Studio project showcases would be linked here]*
+More projects built with NebulaCloud Studio:
+
+| Project | Description |
+|---|---|
+| [**Factory BIM Viewer**](https://github.com/studio-public-demos/factory-bim) | Interactive 3D Building Information Model for an industrial factory complex — Three.js-based walkthrough with layer toggling and measurement tools |
+| [**Stadium Digital Twin**](https://github.com/studio-public-demos/stadium-digital-twin) | Interactive 3D stadium twin with live sensor simulation, crowd heatmaps, and real-time environmental monitoring |
+| [**Metro Station Simulator**](https://github.com/studio-public-demos/metro-station-simulator) | Agent-based 3D metro station with passenger flow simulation and emergency evacuation modeling |
+| [**Circato Ocean Plastic Dashboard**](https://github.com/studio-public-demos/circato-ocean-plastic-tfw-dashboard) | Evidence package for ocean-bound MLP waste repurposing — coastal leakage mapping, unit economics, and traceability |
+| [**VLM Aerodynamics Demo**](https://github.com/studio-public-demos/vlm-aerodynamics-demo) | Interactive 3D wing aerodynamics simulator with real-time vortex lattice visualization |
+| [**Car Concept 3D Dashboard**](https://github.com/studio-public-demos/car-concept-3d-dashboard) | Interactive 3D car configurator with material variants, animated parts, and real-time controls |
+| [**Guntur Change Detection**](https://github.com/studio-public-demos/guntur-change-detection-dashboard) | Geospatial dashboard visualizing building-level change detection with multi-temporal satellite imagery |
 
 ---
 
