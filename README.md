@@ -60,7 +60,9 @@ The live demo uses the **UCI AI4I 2020 Predictive Maintenance Dataset** (10,000 
 
 ## Demo Video
 
-*[Demo video showcasing the platform walkthrough — available upon request]*
+[![Watch the NexusTwin VR-Industrial Twin walkthrough](https://img.youtube.com/vi/_QtpR7pHIl0/0.jpg)](https://youtu.be/_QtpR7pHIl0)
+
+*[Click to watch the NexusTwin VR-Industrial Twin walkthrough on YouTube](https://youtu.be/_QtpR7pHIl0)*
 
 ---
 
