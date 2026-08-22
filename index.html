@@ -18,7 +18,10 @@
   --r:8px;--r2:12px;--font:system-ui,-apple-system,sans-serif;
 }
 body{background:var(--bg);color:var(--text);font-family:var(--font);overflow:hidden;height:100vh}
-#app{display:grid;grid-template-columns:300px 1fr 320px;grid-template-rows:52px 38px 1fr;grid-template-areas:"hdr hdr hdr""nav nav nav""lft vp rgt";height:100vh}
+#app{display:grid;grid-template-columns:300px 1fr 320px;grid-template-rows:52px 38px 1fr;grid-template-areas:"hdr hdr hdr""nav nav nav""lft vp rgt";height:100vh;transition:grid-template-columns .15s ease}
+#app.no-left{grid-template-columns:0px 1fr 320px}
+#app.no-right{grid-template-columns:300px 1fr 0px}
+#app.no-left.no-right{grid-template-columns:0px 1fr 0px}
 
 /* HEADER */
 header{grid-area:hdr;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 18px;gap:12px;z-index:100}
@@ -49,6 +52,8 @@ nav .nav-btn.on{background:var(--cyan);color:#fff;border-color:var(--cyan)}
 /* PANELS */
 #left-panel{grid-area:lft;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
 #right-panel{grid-area:rgt;background:var(--bg2);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+#app.no-left #left-panel{display:none!important}
+#app.no-right #right-panel{display:none!important}
 #viewport{grid-area:vp;position:relative;background:#e4e8ef;cursor:grab}
 #viewport:active{cursor:grabbing}
 #viewport canvas{display:block}
@@ -1001,21 +1006,40 @@ window.switchTab = function(tab){
     el.classList.toggle('active',el.dataset.tab===tab);
   });
 
+  const app = document.getElementById('app');
+  if(tab==='dashboard'){
+    app.classList.remove('no-left','no-right');
+  }else if(tab==='machines'){
+    app.classList.remove('no-left');
+    app.classList.add('no-right');
+  }else if(tab==='analytics'){
+    app.classList.add('no-left');
+    app.classList.remove('no-right');
+  }else if(tab==='alerts'){
+    app.classList.add('no-left','no-right');
+  }
+
   // Alert overlay
   document.getElementById('alertOverlay').classList.toggle('on',tab==='alerts');
 
-  // Resize charts after tab switch
+  // Resize charts & 3D viewport immediately
+  resize();
+  setTimeout(resize,100);
   setTimeout(resize,300);
 };
 
 window.toggleLeft = function(){
-  const lp=document.getElementById('left-panel');
-  lp.style.display=lp.style.display==='none'?'flex':'none';
+  const app = document.getElementById('app');
+  app.classList.toggle('no-left');
+  resize();
+  setTimeout(resize,100);
   setTimeout(resize,300);
 };
 window.toggleRight = function(){
-  const rp=document.getElementById('right-panel');
-  rp.style.display=rp.style.display==='none'?'flex':'none';
+  const app = document.getElementById('app');
+  app.classList.toggle('no-right');
+  resize();
+  setTimeout(resize,100);
   setTimeout(resize,300);
 };
 
