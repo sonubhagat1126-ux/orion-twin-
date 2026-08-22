@@ -129,11 +129,9 @@ nav .nav-btn.on{background:var(--cyan);color:#fff;border-color:var(--cyan)}
 .tt{position:absolute;pointer-events:none;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:8px 12px;font-size:12px;color:var(--text);box-shadow:var(--shadow);display:none;z-index:60;white-space:nowrap}
 
 /* Viewport overlays */
-.db{position:absolute;top:10px;left:12px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:5px 10px;font-size:10px;color:var(--muted);z-index:40;pointer-events:none;box-shadow:var(--shadow)}
-.db strong{color:var(--cyan)}
-.vp-controls{position:absolute;bottom:12px;right:12px;display:flex;flex-direction:column;gap:6px;z-index:45}
-.vp-btn{width:36px;height:36px;border:1px solid var(--border);border-radius:8px;background:var(--bg2);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text2);font-size:16px;box-shadow:var(--shadow);pointer-events:auto;transition:all .12s}
-.vp-btn:hover{background:var(--bg);border-color:var(--border2)}
+.vp-controls{position:absolute;bottom:16px;right:16px;display:flex;flex-direction:column;gap:4px;z-index:45;background:rgba(255,255,255,0.92);backdrop-filter:blur(14px);padding:4px;border-radius:10px;border:1px solid var(--border);box-shadow:0 8px 24px rgba(0,0,0,0.08)}
+.vp-btn{width:32px;height:32px;border:none;border-radius:6px;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text2);font-size:15px;transition:all .12s}
+.vp-btn:hover{background:var(--bg);color:var(--cyan);transform:scale(1.05)}
 
 /* Empty state */
 .empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;text-align:center;color:var(--muted)}
@@ -145,20 +143,20 @@ nav .nav-btn.on{background:var(--cyan);color:#fff;border-color:var(--cyan)}
 .alert-overlay.on{display:flex}
 .alert-overlay .ao-header{padding:16px 20px;border-bottom:1px solid var(--border);font-size:16px;font-weight:700;display:flex;justify-content:space-between;align-items:center}
 
-/* Top-Right Notification Toast Popups */
-#toast-container{position:fixed;top:60px;right:20px;z-index:99999;display:flex;flex-direction:column;gap:10px;pointer-events:none;max-width:380px;width:calc(100% - 40px)}
-.toast-card{pointer-events:auto;background:rgba(255,255,255,0.96);backdrop-filter:blur(12px);border:1px solid var(--border);border-left:4px solid var(--cyan);border-radius:var(--r2);padding:12px 14px;box-shadow:0 12px 32px rgba(0,0,0,0.12);display:flex;align-items:flex-start;gap:10px;animation:slideInRight 0.35s cubic-bezier(0.16, 1, 0.3, 1);transition:all 0.3s ease;position:relative}
+/* Notification Toast Popups inside Viewport */
+#toast-container{position:absolute;top:12px;right:14px;z-index:80;display:flex;flex-direction:column;gap:8px;pointer-events:none;max-width:310px;width:calc(100% - 28px)}
+.toast-card{pointer-events:auto;background:rgba(255,255,255,0.95);backdrop-filter:blur(14px);border:1px solid var(--border);border-left:3.5px solid var(--cyan);border-radius:var(--r);padding:9px 12px;box-shadow:0 8px 24px rgba(0,0,0,0.1);display:flex;align-items:flex-start;gap:8px;animation:slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1);transition:all 0.25s ease;position:relative}
 .toast-card.critical{border-left-color:var(--red);background:rgba(254,242,242,0.96)}
 .toast-card.warning{border-left-color:var(--amber);background:rgba(254,252,232,0.96)}
 .toast-card.info{border-left-color:var(--cyan);background:rgba(240,253,250,0.96)}
-.toast-icon{font-size:16px;line-height:1;margin-top:2px}
+.toast-icon{font-size:14px;line-height:1;margin-top:1px}
 .toast-body{flex:1;min-width:0}
-.toast-title{font-size:12px;font-weight:700;color:var(--text);display:flex;align-items:center;justify-content:space-between;gap:8px}
-.toast-msg{font-size:11px;color:var(--text2);margin-top:3px;line-height:1.4;word-wrap:break-word}
-.toast-time{font-size:9px;color:var(--muted);margin-top:4px;font-weight:500}
-.toast-close{background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;line-height:1;padding:0 2px;transition:color .15s}
+.toast-title{font-size:11px;font-weight:700;color:var(--text);display:flex;align-items:center;justify-content:space-between;gap:6px}
+.toast-msg{font-size:10px;color:var(--text2);margin-top:2px;line-height:1.35;word-wrap:break-word}
+.toast-time{font-size:9px;color:var(--muted);margin-top:3px;font-weight:500}
+.toast-close{background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;line-height:1;padding:0 2px;transition:color .15s}
 .toast-close:hover{color:var(--text)}
-.toast-card.hide{animation:slideOutRight 0.3s ease forwards}
+.toast-card.hide{animation:slideOutRight 0.25s ease forwards}
 
 @keyframes slideInRight{from{transform:translateX(110%);opacity:0}to{transform:translateX(0);opacity:1}}
 @keyframes slideOutRight{from{transform:translateX(0);opacity:1}to{transform:translateX(110%);opacity:0}}
@@ -210,7 +208,7 @@ footer a{color:var(--blue);text-decoration:none;pointer-events:auto}
 <div id="app">
 <header>
   <div class="brand"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="9" stroke-dasharray="4 4"/></svg>ORION<span> TWIN</span></div>
-  <span style="font-size:10px;color:var(--muted);margin-left:4px">Industrial Digital Twin</span>
+  <div style="font-size:10px;color:var(--muted);background:var(--bg);padding:3px 10px;border-radius:12px;border:1px solid var(--border);margin-left:8px"><strong>UCI AI4I 2020</strong> &middot; 10K Telemetry Stream</div>
   <div class="live-indicator"><span class="live-dot"></span><span id="clock">--:--:--</span></div>
 </header>
 
@@ -220,10 +218,8 @@ footer a{color:var(--blue);text-decoration:none;pointer-events:auto}
   <button class="nav-item" data-tab="analytics" onclick="switchTab('analytics')">&#9776; Analytics</button>
   <button class="nav-item" data-tab="alerts" onclick="switchTab('alerts')">&#9888; Alerts</button>
   <div class="nav-ctrl">
-    <button class="nav-btn" onclick="toggleLeft()" title="Toggle Machines Panel">&#9776;</button>
-    <button class="nav-btn" onclick="toggleRight()" title="Toggle Analytics Panel">&raquo;</button>
-    <button class="nav-btn" onclick="resetCamera()" title="Reset View">&#9673;</button>
-    <button class="nav-btn" onclick="toggleFullscreen()" title="Fullscreen">&#9974;</button>
+    <button class="nav-btn" onclick="resetCamera()" title="Reset 3D Camera View"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg></button>
+    <button class="nav-btn" onclick="toggleFullscreen()" title="Toggle Fullscreen Mode"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg></button>
   </div>
 </nav>
 
@@ -246,7 +242,6 @@ footer a{color:var(--blue);text-decoration:none;pointer-events:auto}
 
 <!-- 3D VIEWPORT -->
 <main id="viewport">
-  <div class="db"><strong>&#9432;</strong> UCI AI4I 2020 &middot; 10K samples</div>
   <div class="tt" id="tt3d"></div>
   <div class="vp-controls">
     <button class="vp-btn" onclick="resetCamera()" title="Reset View">&#9673;</button>
@@ -604,7 +599,6 @@ function mkMachine(m){
   const rng=new THREE.Mesh(new THREE.TorusGeometry(1.4,.12,8,48),matOk.clone());
   rng.position.y=.1;rng.rotation.x=Math.PI/2;rng.userData={id:m.id};
   g.add(rng);srs[m.id]=rng;
-  const lb=lbl(m.name);lb.position.set(0,3.8,0);g.add(lb);
   // Particle emitter for heat
   if(m.sensors.process_temp>309){
     const pGeo=new THREE.BufferGeometry();
@@ -784,16 +778,16 @@ function triggerToast(name, msg, level){
   `;
   container.appendChild(card);
   
-  while(container.children.length > 4){
+  while(container.children.length > 2){
     container.removeChild(container.firstChild);
   }
   
   setTimeout(() => {
     if(card.parentNode){
       card.classList.add('hide');
-      setTimeout(() => card.remove(), 300);
+      setTimeout(() => card.remove(), 250);
     }
-  }, 4500);
+  }, 3000);
 }
 
 function addA(mid,name,level,msg){
