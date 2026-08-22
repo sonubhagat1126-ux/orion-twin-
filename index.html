@@ -563,24 +563,55 @@ const mL=new THREE.MeshStandardMaterial({color:'#a0a8b4',roughness:.25,metalness
 const mB=new THREE.MeshStandardMaterial({color:'#4a5260',roughness:.5,metalness:.6});
 const wM=new THREE.MeshStandardMaterial({color:'#c8cdd5',roughness:.45,metalness:.15,transparent:true,opacity:.35});
 
-const mDarkMetal = new THREE.MeshStandardMaterial({color:'#2d3748',roughness:.3,metalness:.9});
-const mCyanAccent = new THREE.MeshStandardMaterial({color:'#0891b2',roughness:.2,metalness:.6});
-const mAmberAccent = new THREE.MeshStandardMaterial({color:'#f59e0b',roughness:.2,metalness:.6});
-const mPurpleAccent = new THREE.MeshStandardMaterial({color:'#8b5cf6',roughness:.2,metalness:.6});
-const mGlass = new THREE.MeshStandardMaterial({color:'#93c5fd',roughness:.1,metalness:.2,transparent:true,opacity:.35});
+const mChrome = new THREE.MeshStandardMaterial({color:'#e2e8f0',roughness:.1,metalness:.95});
+const mScreen = new THREE.MeshStandardMaterial({color:'#0891b2',emissive:'#0891b2',emissiveIntensity:.6,roughness:.2});
+const mYellowHazard = new THREE.MeshStandardMaterial({color:'#eab308',roughness:.3,metalness:.5});
+const mEStop = new THREE.MeshStandardMaterial({color:'#ef4444',emissive:'#ef4444',emissiveIntensity:.4,roughness:.3});
+const mTowerRed = new THREE.MeshStandardMaterial({color:'#ef4444',emissive:'#ef4444',emissiveIntensity:.2});
+const mTowerAmber = new THREE.MeshStandardMaterial({color:'#f59e0b',emissive:'#f59e0b',emissiveIntensity:.2});
+const mTowerGreen = new THREE.MeshStandardMaterial({color:'#10b981',emissive:'#10b981',emissiveIntensity:.9});
 
-const matOk=new THREE.MeshStandardMaterial({color:'#10b981',roughness:.15,metalness:.2,emissive:'#10b981',emissiveIntensity:.4});
-const matWn=new THREE.MeshStandardMaterial({color:'#f59e0b',roughness:.15,metalness:.2,emissive:'#f59e0b',emissiveIntensity:.6});
-const matBd=new THREE.MeshStandardMaterial({color:'#ef4444',roughness:.15,metalness:.2,emissive:'#ef4444',emissiveIntensity:.8});
+function mkControlConsole(){
+  const cGroup = new THREE.Group();
+  // Articulated mounting arm
+  const arm1 = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.6, 8), mDarkMetal);
+  arm1.rotation.z = Math.PI / 3; arm1.position.set(0.2, 0.2, 0); cGroup.add(arm1);
+  const arm2 = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.5, 8), mDarkMetal);
+  arm2.position.set(0.45, 0.6, 0); cGroup.add(arm2);
 
-const mgs={}, srs={}, spindles={}, particles=[];
+  // CNC Touchscreen Console Box
+  const box = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.6, 0.12), mD);
+  box.position.set(0.45, 0.9, 0.06); box.castShadow = true; cGroup.add(box);
 
-function lbl(t){
-  const c=document.createElement('canvas');c.width=256;c.height=48;
-  const x=c.getContext('2d');x.fillStyle='#1a1f2e';x.font='bold 18px system-ui';x.textAlign='center';x.fillText(t,128,30);
-  const tx=new THREE.CanvasTexture(c);tx.minFilter=THREE.LinearFilter;
-  const s=new THREE.Sprite(new THREE.SpriteMaterial({map:tx,transparent:true,depthTest:false,depthWrite:false}));
-  s.scale.set(3.5,.65,1);return s;
+  // Glowing Screen
+  const scr = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 0.38), mScreen);
+  scr.position.set(0.45, 0.95, 0.13); cGroup.add(scr);
+
+  // Emergency Stop Button (Yellow housing + Red Mushroom Push Button)
+  const estopBox = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 0.04), mYellowHazard);
+  estopBox.position.set(0.62, 0.72, 0.13); cGroup.add(estopBox);
+  const estopBtn = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.04, 12), mEStop);
+  estopBtn.rotation.x = Math.PI / 2; estopBtn.position.set(0.62, 0.72, 0.16); cGroup.add(estopBtn);
+
+  return cGroup;
+}
+
+function mkSignalTower(yPos){
+  const tGroup = new THREE.Group();
+  tGroup.position.set(-0.8, yPos, -0.6);
+  // Support pole
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.6, 8), mChrome);
+  pole.position.y = 0.3; tGroup.add(pole);
+
+  // 3-Light Stack (Red / Amber / Green)
+  const redL = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.14, 12), mTowerRed);
+  redL.position.y = 0.88; tGroup.add(redL);
+  const ambL = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.14, 12), mTowerAmber);
+  ambL.position.y = 0.73; tGroup.add(ambL);
+  const grnL = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.14, 12), mTowerGreen);
+  grnL.position.y = 0.58; tGroup.add(grnL);
+
+  return tGroup;
 }
 
 function mkMachine(m){
@@ -589,91 +620,137 @@ function mkMachine(m){
   let spindleGroup=new THREE.Group();
 
   if(m.productType==='L'){
-    // L-SERIES: VERTICAL CNC MILLING MACHINE
-    const base=new THREE.Mesh(new THREE.BoxGeometry(2.4,.45,2.0),mB);
-    base.position.y=.22;base.castShadow=true;base.receiveShadow=true;g.add(base);
+    // L-SERIES: HEAVY DUAL-COLUMN VERTICAL CNC MILLING CENTER
+    const base=new THREE.Mesh(new THREE.BoxGeometry(2.6,.48,2.2),mB);
+    base.position.y=.24;base.castShadow=true;base.receiveShadow=true;g.add(base);
 
-    const col=new THREE.Mesh(new THREE.BoxGeometry(.7,3.0,.7),mDarkMetal);
-    col.position.set(-.75,1.7,-.3);col.castShadow=true;g.add(col);
+    // Hazard Stripes Base Trim
+    const trim=new THREE.Mesh(new THREE.BoxGeometry(2.64,.08,2.24),mYellowHazard);
+    trim.position.y=.46;g.add(trim);
 
-    const rail1=new THREE.Mesh(new THREE.BoxGeometry(.08,2.6,.08),mL);
-    rail1.position.set(-.48,1.7,-.05);g.add(rail1);
-    const rail2=new THREE.Mesh(new THREE.BoxGeometry(.08,2.6,.08),mL);
-    rail2.position.set(-.48,1.7,-.55);g.add(rail2);
+    const col=new THREE.Mesh(new THREE.BoxGeometry(.8,3.2,.8),mDarkMetal);
+    col.position.set(-.8,1.8,-.4);col.castShadow=true;g.add(col);
 
-    const head=new THREE.Mesh(new THREE.BoxGeometry(.8,.7,.8),mD);
-    head.position.set(-.4,2.9,-.3);head.castShadow=true;g.add(head);
+    // Dual Z-axis linear guide rails
+    const rail1=new THREE.Mesh(new THREE.BoxGeometry(.09,2.8,.09),mChrome);
+    rail1.position.set(-.52,1.8,-.15);g.add(rail1);
+    const rail2=new THREE.Mesh(new THREE.BoxGeometry(.09,2.8,.09),mChrome);
+    rail2.position.set(-.52,1.8,-.65);g.add(rail2);
 
-    spindleGroup.position.set(-.4,2.45,-.3);
-    const sp=new THREE.Mesh(new THREE.CylinderGeometry(.18,.18,.7,16),mD);
+    // Tool Carousel Magazine Disc
+    const carousel=new THREE.Mesh(new THREE.CylinderGeometry(.45,.45,.12,16),mDarkMetal);
+    carousel.position.set(-.8,3.0,.2);g.add(carousel);
+
+    const head=new THREE.Mesh(new THREE.BoxGeometry(.9,.75,.9),mD);
+    head.position.set(-.45,3.0,-.4);head.castShadow=true;g.add(head);
+
+    spindleGroup.position.set(-.45,2.5,-.4);
+    const sp=new THREE.Mesh(new THREE.CylinderGeometry(.2,.2,.75,24),mChrome);
     sp.castShadow=true;spindleGroup.add(sp);
-    const bit=new THREE.Mesh(new THREE.CylinderGeometry(.05,.09,.35,12),mL);
-    bit.position.y=-.45;spindleGroup.add(bit);
+    const bit=new THREE.Mesh(new THREE.CylinderGeometry(.06,.1,.4,12),mL);
+    bit.position.y=-.48;spindleGroup.add(bit);
     g.add(spindleGroup);
 
-    const tblBase=new THREE.Mesh(new THREE.BoxGeometry(1.8,.25,1.4),mM);
-    tblBase.position.set(.2,.55,.1);tblBase.castShadow=true;g.add(tblBase);
-    const tblBed=new THREE.Mesh(new THREE.BoxGeometry(1.6,.12,1.2),mCyanAccent);
-    tblBed.position.set(.2,.72,.1);g.add(tblBed);
+    // Precision T-Slot Milling Table
+    const tblBase=new THREE.Mesh(new THREE.BoxGeometry(2.0,.28,1.5),mM);
+    tblBase.position.set(.25,.6,.15);tblBase.castShadow=true;g.add(tblBase);
+    const tblBed=new THREE.Mesh(new THREE.BoxGeometry(1.8,.14,1.3),mCyanAccent);
+    tblBed.position.set(.25,.78,.15);g.add(tblBed);
 
-    const pipe=new THREE.Mesh(new THREE.CylinderGeometry(.03,.03,.6,8),mDarkMetal);
-    pipe.position.set(-.2,2.3,-.1);pipe.rotation.z=-Math.PI/6;g.add(pipe);
+    // Coolant Nozzles
+    const pipe=new THREE.Mesh(new THREE.CylinderGeometry(.03,.03,.6,8),mChrome);
+    pipe.position.set(-.2,2.4,-.2);pipe.rotation.z=-Math.PI/5;g.add(pipe);
+
+    // Operator Console & Signal Tower
+    g.add(mkControlConsole());
+    g.add(mkSignalTower(3.4));
 
   }else if(m.productType==='M'){
-    // M-SERIES: HORIZONTAL CNC LATHE / TURNING CENTER
-    const base=new THREE.Mesh(new THREE.BoxGeometry(3.2,.5,1.8),mB);
-    base.position.y=.25;base.castShadow=true;base.receiveShadow=true;g.add(base);
+    // M-SERIES: SLANTED BED CNC TURNING CENTER / INDUSTRIAL LATHE
+    const base=new THREE.Mesh(new THREE.BoxGeometry(3.4,.55,2.0),mB);
+    base.position.y=.27;base.castShadow=true;base.receiveShadow=true;g.add(base);
 
-    const headstock=new THREE.Mesh(new THREE.BoxGeometry(1.1,1.8,1.5),mDarkMetal);
-    headstock.position.set(-1.0,1.3,0.0);headstock.castShadow=true;g.add(headstock);
+    // Slanted Chip Tray Pan
+    const tray=new THREE.Mesh(new THREE.BoxGeometry(3.44,.08,2.04),mDarkMetal);
+    tray.position.y=.56;g.add(tray);
 
-    spindleGroup.position.set(-.35,1.4,0.0);
-    const chuck=new THREE.Mesh(new THREE.CylinderGeometry(.45,.45,.35,24),mAmberAccent);
+    const headstock=new THREE.Mesh(new THREE.BoxGeometry(1.2,2.0,1.6),mDarkMetal);
+    headstock.position.set(-1.1,1.4,0.0);headstock.castShadow=true;g.add(headstock);
+
+    // 3-Jaw Chrome Lathe Chuck
+    spindleGroup.position.set(-.45,1.5,0.0);
+    const chuck=new THREE.Mesh(new THREE.CylinderGeometry(.5,.5,.38,24),mChrome);
     chuck.rotation.z=Math.PI/2;chuck.castShadow=true;spindleGroup.add(chuck);
-    const workpiece=new THREE.Mesh(new THREE.CylinderGeometry(.18,.18,1.2,16),mL);
-    workpiece.rotation.z=Math.PI/2;workpiece.position.x=.75;spindleGroup.add(workpiece);
+    const workpiece=new THREE.Mesh(new THREE.CylinderGeometry(.2,.2,1.3,24),mAmberAccent);
+    workpiece.rotation.z=Math.PI/2;workpiece.position.x=.8;spindleGroup.add(workpiece);
     g.add(spindleGroup);
 
-    const tailstock=new THREE.Mesh(new THREE.BoxGeometry(.7,1.0,.9),mD);
-    tailstock.position.set(1.1,1.0,0.0);tailstock.castShadow=true;g.add(tailstock);
+    // Right Tailstock Barrel
+    const tailstock=new THREE.Mesh(new THREE.BoxGeometry(.8,1.1,1.0),mD);
+    tailstock.position.set(1.15,1.1,0.0);tailstock.castShadow=true;g.add(tailstock);
 
-    const frame=new THREE.Mesh(new THREE.BoxGeometry(2.4,1.4,1.4),mGlass);
-    frame.position.set(.1,1.7,0.0);g.add(frame);
+    // Slanted Protective Safety Glass Frame
+    const frame=new THREE.Mesh(new THREE.BoxGeometry(2.6,1.5,1.5),mGlass);
+    frame.position.set(.1,1.8,0.0);g.add(frame);
 
-    const turret=new THREE.Mesh(new THREE.CylinderGeometry(.3,.3,.25,8),mM);
-    turret.position.set(.3,1.4,-.4);turret.rotation.x=Math.PI/2;g.add(turret);
+    // 8-Station Tool Turret Indexer
+    const turret=new THREE.Mesh(new THREE.CylinderGeometry(.35,.35,.28,8),mM);
+    turret.position.set(.35,1.5,-.45);turret.rotation.x=Math.PI/2;g.add(turret);
+
+    // Operator Console & Signal Tower
+    g.add(mkControlConsole());
+    g.add(mkSignalTower(2.5));
 
   }else{
-    // H-SERIES: HIGH-SPEC 5-AXIS CNC GANTRY ROUTER
-    const base=new THREE.Mesh(new THREE.BoxGeometry(3.0,.4,2.6),mB);
-    base.position.y=.2;base.castShadow=true;base.receiveShadow=true;g.add(base);
+    // H-SERIES: HEAVY-DUTY 5-AXIS CNC GANTRY ROUTER ARCH
+    const base=new THREE.Mesh(new THREE.BoxGeometry(3.2,.45,2.8),mB);
+    base.position.y=.22;base.castShadow=true;base.receiveShadow=true;g.add(base);
 
-    const p1=new THREE.Mesh(new THREE.BoxGeometry(.5,2.8,.6),mDarkMetal);
-    p1.position.set(-1.1,1.6,1.0);p1.castShadow=true;g.add(p1);
-    const p2=new THREE.Mesh(new THREE.BoxGeometry(.5,2.8,.6),mDarkMetal);
-    p2.position.set(-1.1,1.6,-1.0);p2.castShadow=true;g.add(p2);
+    // Gantry Safety Stripe Trims
+    const trim1=new THREE.Mesh(new THREE.BoxGeometry(3.24,.08,.3),mYellowHazard);
+    trim1.position.set(0,.46,1.3);g.add(trim1);
+    const trim2=new THREE.Mesh(new THREE.BoxGeometry(3.24,.08,.3),mYellowHazard);
+    trim2.position.set(0,.46,-1.3);g.add(trim2);
 
-    const bridge=new THREE.Mesh(new THREE.BoxGeometry(.6,.6,2.6),mPurpleAccent);
-    bridge.position.set(-1.1,2.8,0.0);bridge.castShadow=true;g.add(bridge);
+    // 4 Heavy Vertical Gantry Pillars
+    const p1=new THREE.Mesh(new THREE.BoxGeometry(.55,3.0,.65),mDarkMetal);
+    p1.position.set(-1.2,1.7,1.1);p1.castShadow=true;g.add(p1);
+    const p2=new THREE.Mesh(new THREE.BoxGeometry(.55,3.0,.65),mDarkMetal);
+    p2.position.set(-1.2,1.7,-1.1);p2.castShadow=true;g.add(p2);
 
-    spindleGroup.position.set(-.5,2.2,0.0);
-    const headHousing=new THREE.Mesh(new THREE.BoxGeometry(.7,.8,.7),mD);
+    // Transverse Gantry Bridge Crossbeam
+    const bridge=new THREE.Mesh(new THREE.BoxGeometry(.7,.7,2.8),mPurpleAccent);
+    bridge.position.set(-1.2,3.0,0.0);bridge.castShadow=true;g.add(bridge);
+
+    // Suspended 5-Axis Cutter Head
+    spindleGroup.position.set(-.55,2.3,0.0);
+    const headHousing=new THREE.Mesh(new THREE.BoxGeometry(.75,.85,.75),mD);
     headHousing.castShadow=true;spindleGroup.add(headHousing);
-    const sp=new THREE.Mesh(new THREE.CylinderGeometry(.2,.2,.8,16),mM);
-    sp.position.y=-.5;sp.castShadow=true;spindleGroup.add(sp);
-    const cutterBit=new THREE.Mesh(new THREE.ConeGeometry(.12,.4,12),mL);
-    cutterBit.position.y=-.95;cutterBit.rotation.x=Math.PI;spindleGroup.add(cutterBit);
+    const sp=new THREE.Mesh(new THREE.CylinderGeometry(.22,.22,.85,24),mChrome);
+    sp.position.y=-.55;sp.castShadow=true;spindleGroup.add(sp);
+    const cutterBit=new THREE.Mesh(new THREE.ConeGeometry(.14,.45,16),mL);
+    cutterBit.position.y=-1.02;cutterBit.rotation.x=Math.PI;spindleGroup.add(cutterBit);
     g.add(spindleGroup);
 
-    const vacBed=new THREE.Mesh(new THREE.BoxGeometry(2.4,.2,2.2),mD);
-    vacBed.position.set(.1,.5,0.0);vacBed.castShadow=true;g.add(vacBed);
-    const gridOverlay=new THREE.Mesh(new THREE.BoxGeometry(2.2,.05,2.0),mCyanAccent);
-    gridOverlay.position.set(.1,.62,0.0);g.add(gridOverlay);
+    // Vacuum Grid Bed Table
+    const vacBed=new THREE.Mesh(new THREE.BoxGeometry(2.6,.22,2.4),mD);
+    vacBed.position.set(.1,.55,0.0);vacBed.castShadow=true;g.add(vacBed);
+    const gridOverlay=new THREE.Mesh(new THREE.BoxGeometry(2.4,.06,2.2),mCyanAccent);
+    gridOverlay.position.set(.1,.68,0.0);g.add(gridOverlay);
+
+    // Operator Console & Signal Tower
+    g.add(mkControlConsole());
+    g.add(mkSignalTower(3.5));
   }
 
   spindles[m.id]=spindleGroup;
 
-  const rng=new THREE.Mesh(new THREE.TorusGeometry(1.6,.12,8,48),matOk.clone());
+  // Floor Safety Zone Outlines (Yellow dashed line on floor around machine)
+  const floorBox = new THREE.Mesh(new THREE.BoxGeometry(3.8, 0.02, 3.2), new THREE.MeshStandardMaterial({color: '#eab308', roughness: .8}));
+  floorBox.position.y = 0.01; g.add(floorBox);
+
+  // Status Emissive Ring around machine base
+  const rng=new THREE.Mesh(new THREE.TorusGeometry(1.7,.12,8,48),matOk.clone());
   rng.position.y=.08;rng.rotation.x=Math.PI/2;rng.userData={id:m.id};
   g.add(rng);srs[m.id]=rng;
 
