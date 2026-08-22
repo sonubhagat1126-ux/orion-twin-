@@ -60,8 +60,10 @@ nav .nav-btn.on{background:var(--cyan);color:#fff;border-color:var(--cyan)}
 /* Section */
 .sec{padding:14px 16px;border-bottom:1px solid var(--border)}
 .sec:last-child{border-bottom:none}
-.sec-title{font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);margin-bottom:10px;font-weight:700;display:flex;align-items:center;gap:8px}
+.sec-title{font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);margin-bottom:10px;font-weight:700;display:flex;align-items:center;justify-content:space-between;gap:8px}
 .sec-title .badge{font-size:10px;background:var(--bg);padding:2px 8px;border-radius:10px;font-weight:500;letter-spacing:0;text-transform:none}
+.sec-expand-btn{background:var(--bg);border:1px solid var(--border);color:var(--text2);width:22px;height:22px;border-radius:4px;cursor:pointer;font-size:12px;display:inline-flex;align-items:center;justify-content:center;transition:all .12s;line-height:1}
+.sec-expand-btn:hover{background:var(--cyan);color:#fff;border-color:var(--cyan);transform:scale(1.1)}
 
 /* Machine list */
 .machine-item{display:flex;align-items:center;padding:10px 12px;min-height:44px;border-radius:var(--r);cursor:pointer;transition:all .12s;gap:10px;border:1px solid transparent;margin-bottom:1px}
@@ -156,6 +158,27 @@ nav .nav-btn.on{background:var(--cyan);color:#fff;border-color:var(--cyan)}
 @keyframes slideInRight{from{transform:translateX(110%);opacity:0}to{transform:translateX(0);opacity:1}}
 @keyframes slideOutRight{from{transform:translateX(0);opacity:1}to{transform:translateX(110%);opacity:0}}
 
+/* Fullscreen Popup Chart Modal */
+.chart-modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,0.7);backdrop-filter:blur(12px);z-index:99999;display:none;align-items:center;justify-content:center;padding:20px}
+.chart-modal-overlay.on{display:flex;animation:fadeIn .25s ease}
+.chart-modal-card{background:var(--bg2);border:1px solid var(--border);border-radius:16px;width:94%;max-width:1100px;max-height:92vh;display:flex;flex-direction:column;box-shadow:0 25px 60px rgba(0,0,0,0.3);overflow:hidden;animation:modalPop .3s cubic-bezier(0.16, 1, 0.3, 1)}
+.cm-header{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--bg)}
+.cm-title-wrap{display:flex;align-items:center;gap:12px}
+.cm-title-wrap h3{font-size:15px;font-weight:700;color:var(--text)}
+.cm-select{background:var(--bg2);border:1px solid var(--border);color:var(--text);font-size:12px;font-weight:600;padding:4px 10px;border-radius:6px;cursor:pointer}
+.cm-actions{display:flex;align-items:center;gap:8px}
+.cm-btn{background:var(--bg2);border:1px solid var(--border);color:var(--text2);padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;transition:all .12s}
+.cm-btn:hover{background:var(--cyan);color:#fff;border-color:var(--cyan)}
+.cm-close{background:var(--bg2);border:1px solid var(--border);color:var(--text2);width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;transition:all .12s}
+.cm-close:hover{background:var(--red);color:#fff;border-color:var(--red)}
+.cm-body{padding:18px 20px;flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:16px}
+.cm-chart-container{height:360px;position:relative;width:100%;background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:14px}
+.cm-table-container{overflow-x:auto}
+.cm-table{width:100%;border-collapse:collapse;font-size:11px;text-align:left}
+.cm-table th{background:var(--bg);padding:8px 12px;color:var(--muted);text-transform:uppercase;font-weight:600;border-bottom:1px solid var(--border)}
+.cm-table td{padding:8px 12px;border-bottom:1px solid var(--border);font-variant-numeric:tabular-nums}
+.cm-table tr:hover{background:var(--bg)}
+
 /* Footer */
 footer{position:fixed;bottom:0;left:0;right:0;text-align:center;padding:5px;font-size:9px;color:var(--dim);z-index:200;pointer-events:none}
 footer a{color:var(--blue);text-decoration:none;pointer-events:auto}
@@ -242,8 +265,8 @@ footer a{color:var(--blue);text-decoration:none;pointer-events:auto}
         <div class="kpi-card"><div class="kpi-label">Runtime</div><div class="kpi-value" style="font-size:20px" id="k4-d">--</div><div class="kpi-sub">uptime</div></div>
       </div>
     </div>
-    <div class="sec"><div class="sec-title">Failure Distribution</div><div class="chart-box chart-sm"><canvas id="fc"></canvas></div></div>
-    <div class="sec"><div class="sec-title sec-title-trend">Sensor Trends (24h)</div><div class="chart-box chart-md"><canvas id="tc"></canvas></div></div>
+    <div class="sec"><div class="sec-title"><span>Failure Distribution</span><button class="sec-expand-btn" onclick="openChartModal('failure')" title="Expand Fullscreen Popup">&boxbox;</button></div><div class="chart-box chart-sm"><canvas id="fc"></canvas></div></div>
+    <div class="sec"><div class="sec-title sec-title-trend"><span>Sensor Trends (24h)</span><button class="sec-expand-btn" onclick="openChartModal('trend')" title="Expand Fullscreen Popup">&boxbox;</button></div><div class="chart-box chart-md"><canvas id="tc"></canvas></div></div>
   </div>
   <!-- Machines tab content (hidden right panel) -->
   <div class="tab-content" data-tab="machines"></div>
@@ -259,9 +282,9 @@ footer a{color:var(--blue);text-decoration:none;pointer-events:auto}
         <div class="kpi-card"><div class="kpi-label">Runtime</div><div class="kpi-value" style="font-size:20px" id="k4-a">--</div><div class="kpi-sub">uptime</div></div>
       </div>
     </div>
-    <div class="sec"><div class="sec-title">Failure Distribution</div><div class="chart-box chart-md"><canvas id="fc2"></canvas></div></div>
-    <div class="sec"><div class="sec-title">Risk Assessment</div><div class="chart-box chart-md"><canvas id="rc"></canvas></div></div>
-    <div class="sec"><div class="sec-title sec-title-trend">Sensor Trends (24h)</div><div class="chart-box chart-lg"><canvas id="tc2"></canvas></div></div>
+    <div class="sec"><div class="sec-title"><span>Failure Distribution</span><button class="sec-expand-btn" onclick="openChartModal('failure')" title="Expand Fullscreen Popup">&boxbox;</button></div><div class="chart-box chart-md"><canvas id="fc2"></canvas></div></div>
+    <div class="sec"><div class="sec-title"><span>Risk Assessment</span><button class="sec-expand-btn" onclick="openChartModal('risk')" title="Expand Fullscreen Popup">&boxbox;</button></div><div class="chart-box chart-md"><canvas id="rc"></canvas></div></div>
+    <div class="sec"><div class="sec-title sec-title-trend"><span>Sensor Trends (24h)</span><button class="sec-expand-btn" onclick="openChartModal('trend')" title="Expand Fullscreen Popup">&boxbox;</button></div><div class="chart-box chart-lg"><canvas id="tc2"></canvas></div></div>
   </div>
   <!-- Alerts tab content (hidden right panel) -->
   <div class="tab-content" data-tab="alerts"></div>
@@ -270,6 +293,28 @@ footer a{color:var(--blue);text-decoration:none;pointer-events:auto}
 
 <footer><a href="#">Orion Industrial Digital Twin Platform</a></footer>
 <div id="toast-container"></div>
+
+<!-- Fullscreen Chart Modal Popup -->
+<div class="chart-modal-overlay" id="chartModal">
+  <div class="chart-modal-card">
+    <div class="cm-header">
+      <div class="cm-title-wrap">
+        <h3 id="cmTitle">Detailed Telemetry & Sensor Analytics</h3>
+        <select id="cmMachineSelect" onchange="switchModalMachine(this.value)" class="cm-select"></select>
+      </div>
+      <div class="cm-actions">
+        <button class="cm-btn" onclick="toggleModalFullscreen()" title="Toggle Fullscreen Mode">&boxbox; Fullscreen</button>
+        <button class="cm-close" onclick="closeChartModal()">&times;</button>
+      </div>
+    </div>
+    <div class="cm-body">
+      <div class="cm-chart-container">
+        <canvas id="cmCanvas"></canvas>
+      </div>
+      <div class="cm-table-container" id="cmTableWrap"></div>
+    </div>
+  </div>
+</div>
 
 <script>window.__ND__ = {"dataset": {"name": "AI4I 2020 Predictive Maintenance Dataset", "source": "UCI Machine Learning Repository", "url": "https://archive.ics.uci.edu/dataset/601/predictive+maintenance+dataset", "description": "Real industrial manufacturing data with 10,000 samples, 5 sensor types, and 5 failure modes across 3 machine variants.", "rows": 10000, "columns": 14, "failure_types": ["Tool Wear Failure (TWF)", "Heat Dissipation Failure (HDF)", "Power Failure (PWF)", "Overstrain Failure (OSF)", "Random Failure (RNF)"]}, "overall_stats": {"total_samples": 10000, "failure_rate": 3.39, "avg_tool_wear": 107.951, "avg_air_temp": 300.00493, "avg_process_temp": 310.00555999999995, "avg_speed": 1538.7761, "avg_torque": 39.986909999999995, "failure_distribution": {"TWF": 46, "HDF": 115, "PWF": 95, "OSF": 98, "RNF": 19}, "product_type_distribution": {"L": 6000, "M": 2997, "H": 1003}}, "machines": [{"id": "l50144", "name": "L-Series Machine 50144", "type": "Low-Spec CNC Mill", "productType": "L", "sensors": {"air_temp": 300.7, "process_temp": 309.5, "speed": 1692.0, "torque": 30.3, "tool_wear": 64.0, "power": 5.3687285979077}, "sensor_ranges": {"air_temp": {"lo": 297.1, "hi": 303.5, "unit": "K"}, "process_temp": {"lo": 307.8, "hi": 312.4, "unit": "K"}, "speed": {"lo": 1331.95, "hi": 1871.0500000000002, "unit": "rpm"}, "torque": {"lo": 23.4, "hi": 56.405000000000015, "unit": "Nm"}, "tool_wear": {"lo": 0, "hi": 250, "unit": "min"}}, "failure_risk": 0.0, "status": "normal", "maint_interval_days": 90, "days_since_maint": 45, "position": [-8, 0, -6]}, {"id": "l53689", "name": "L-Series Machine 53689", "type": "Low-Spec CNC Mill", "productType": "L", "sensors": {"air_temp": 301.1, "process_temp": 310.1, "speed": 1564.0, "torque": 36.8, "tool_wear": 7.0, "power": 6.027164294765061}, "sensor_ranges": {"air_temp": {"lo": 297.1, "hi": 303.5, "unit": "K"}, "process_temp": {"lo": 307.8, "hi": 312.4, "unit": "K"}, "speed": {"lo": 1331.95, "hi": 1871.0500000000002, "unit": "rpm"}, "torque": {"lo": 23.4, "hi": 56.405000000000015, "unit": "Nm"}, "tool_wear": {"lo": 0, "hi": 250, "unit": "min"}}, "failure_risk": 0.0, "status": "normal", "maint_interval_days": 90, "days_since_maint": 34, "position": [8, 0, -6]}, {"id": "l47544", "name": "L-Series Machine 47544", "type": "Low-Spec CNC Mill", "productType": "L", "sensors": {"air_temp": 297.6, "process_temp": 308.4, "speed": 1407.0, "torque": 55.2, "tool_wear": 86.0, "power": 8.133203480883417}, "sensor_ranges": {"air_temp": {"lo": 297.1, "hi": 303.5, "unit": "K"}, "process_temp": {"lo": 307.8, "hi": 312.4, "unit": "K"}, "speed": {"lo": 1331.95, "hi": 1871.0500000000002, "unit": "rpm"}, "torque": {"lo": 23.4, "hi": 56.405000000000015, "unit": "Nm"}, "tool_wear": {"lo": 0, "hi": 250, "unit": "min"}}, "failure_risk": 0.0, "status": "normal", "maint_interval_days": 90, "days_since_maint": 61, "position": [-4, 0, 0]}, {"id": "m15794", "name": "M-Series Machine 15794", "type": "Medium-Spec CNC Lathe", "productType": "M", "sensors": {"air_temp": 295.5, "process_temp": 306.0, "speed": 1326.0, "torque": 50.8, "tool_wear": 18.0, "power": 7.054003958405329}, "sensor_ranges": {"air_temp": {"lo": 297.1, "hi": 303.5, "unit": "K"}, "process_temp": {"lo": 307.7, "hi": 312.6, "unit": "K"}, "speed": {"lo": 1330.8, "hi": 1867.1999999999998, "unit": "rpm"}, "torque": {"lo": 23.38, "hi": 56.2, "unit": "Nm"}, "tool_wear": {"lo": 0, "hi": 250, "unit": "min"}}, "failure_risk": 0.0, "status": "normal", "maint_interval_days": 120, "days_since_maint": 53, "position": [4, 0, 0]}, {"id": "m23511", "name": "M-Series Machine 23511", "type": "Medium-Spec CNC Lathe", "productType": "M", "sensors": {"air_temp": 297.4, "process_temp": 308.4, "speed": 1564.0, "torque": 35.0, "tool_wear": 105.0, "power": 5.732357345564597}, "sensor_ranges": {"air_temp": {"lo": 297.1, "hi": 303.5, "unit": "K"}, "process_temp": {"lo": 307.7, "hi": 312.6, "unit": "K"}, "speed": {"lo": 1330.8, "hi": 1867.1999999999998, "unit": "rpm"}, "torque": {"lo": 23.38, "hi": 56.2, "unit": "Nm"}, "tool_wear": {"lo": 0, "hi": 250, "unit": "min"}}, "failure_risk": 0.0, "status": "normal", "maint_interval_days": 120, "days_since_maint": 52, "position": [-8, 0, 6]}, {"id": "m16152", "name": "M-Series Machine 16152", "type": "Medium-Spec CNC Lathe", "productType": "M", "sensors": {"air_temp": 298.7, "process_temp": 309.7, "speed": 1868.0, "torque": 23.8, "tool_wear": 118.0, "power": 4.655671096310725}, "sensor_ranges": {"air_temp": {"lo": 297.1, "hi": 303.5, "unit": "K"}, "process_temp": {"lo": 307.7, "hi": 312.6, "unit": "K"}, "speed": {"lo": 1330.8, "hi": 1867.1999999999998, "unit": "rpm"}, "torque": {"lo": 23.38, "hi": 56.2, "unit": "Nm"}, "tool_wear": {"lo": 0, "hi": 250, "unit": "min"}}, "failure_risk": 0.0, "status": "normal", "maint_interval_days": 120, "days_since_maint": 76, "position": [8, 0, 6]}, {"id": "h31066", "name": "H-Series Machine 31066", "type": "High-Spec CNC Router", "productType": "H", "sensors": {"air_temp": 297.9, "process_temp": 307.8, "speed": 1635.0, "torque": 34.0, "tool_wear": 142.0, "power": 5.821369105588892}, "sensor_ranges": {"air_temp": {"lo": 297.0, "hi": 303.5, "unit": "K"}, "process_temp": {"lo": 307.61, "hi": 312.5, "unit": "K"}, "speed": {"lo": 1341.1, "hi": 1852.6999999999998, "unit": "rpm"}, "torque": {"lo": 23.810000000000002, "hi": 54.69, "unit": "Nm"}, "tool_wear": {"lo": 0, "hi": 250, "unit": "min"}}, "failure_risk": 0.0, "status": "normal", "maint_interval_days": 180, "days_since_maint": 53, "position": [-1, 0, -10]}, {"id": "h31603", "name": "H-Series Machine 31603", "type": "High-Spec CNC Router", "productType": "H", "sensors": {"air_temp": 299.7, "process_temp": 309.2, "speed": 1554.0, "torque": 41.6, "tool_wear": 62.0, "power": 6.769752756746568}, "sensor_ranges": {"air_temp": {"lo": 297.0, "hi": 303.5, "unit": "K"}, "process_temp": {"lo": 307.61, "hi": 312.5, "unit": "K"}, "speed": {"lo": 1341.1, "hi": 1852.6999999999998, "unit": "rpm"}, "torque": {"lo": 23.810000000000002, "hi": 54.69, "unit": "Nm"}, "tool_wear": {"lo": 0, "hi": 250, "unit": "min"}}, "failure_risk": 0.0, "status": "normal", "maint_interval_days": 180, "days_since_maint": 51, "position": [1, 0, 10]}], "failure_profiles": {"L": {"air_temp_mean": 300.7565957446808, "process_temp_mean": 310.24851063829783, "speed_mean": 1482.408510638298, "torque_mean": 50.785106382978725, "tool_wear_mean": 148.88936170212767, "twf_rate": 0.10638297872340426, "hdf_rate": 0.32340425531914896, "pwf_rate": 0.251063829787234, "osf_rate": 0.3702127659574468}, "M": {"air_temp_mean": 301.18674698795184, "process_temp_mean": 310.40240963855416, "speed_mean": 1550.0361445783133, "torque_mean": 48.2421686746988, "tool_wear_mean": 129.289156626506, "twf_rate": 0.1686746987951807, "hdf_rate": 0.37349397590361444, "pwf_rate": 0.37349397590361444, "osf_rate": 0.10843373493975904}, "H": {"air_temp_mean": 301.15238095238095, "process_temp_mean": 310.31428571428563, "speed_mean": 1442.3809523809523, "torque_mean": 50.87619047619047, "tool_wear_mean": 143.9047619047619, "twf_rate": 0.3333333333333333, "hdf_rate": 0.38095238095238093, "pwf_rate": 0.23809523809523808, "osf_rate": 0.09523809523809523}}, "failure_events": [{"machine_id": "l54689", "machine_type": "L", "failure_types": ["Overstrain Failure"], "air_temp": 300.6, "process_temp": 311.9, "speed": 1372.0, "torque": 60.1, "tool_wear": 212.0}, {"machine_id": "m18981", "machine_type": "M", "failure_types": ["Heat Dissipation Failure"], "air_temp": 302.1, "process_temp": 310.7, "speed": 1364.0, "torque": 47.8, "tool_wear": 213.0}, {"machine_id": "l51297", "machine_type": "L", "failure_types": ["Overstrain Failure"], "air_temp": 301.9, "process_temp": 310.5, "speed": 1340.0, "torque": 55.7, "tool_wear": 204.0}, {"machine_id": "l48689", "machine_type": "L", "failure_types": ["Tool Wear Failure"], "air_temp": 298.0, "process_temp": 308.5, "speed": 1429.0, "torque": 37.7, "tool_wear": 220.0}, {"machine_id": "m19033", "machine_type": "M", "failure_types": ["Heat Dissipation Failure"], "air_temp": 302.2, "process_temp": 310.6, "speed": 1346.0, "torque": 49.2, "tool_wear": 134.0}, {"machine_id": "l52156", "machine_type": "L", "failure_types": ["Overstrain Failure"], "air_temp": 303.7, "process_temp": 312.7, "speed": 1359.0, "torque": 56.8, "tool_wear": 194.0}, {"machine_id": "l51716", "machine_type": "L", "failure_types": ["Heat Dissipation Failure"], "air_temp": 302.4, "process_temp": 310.2, "speed": 1351.0, "torque": 45.1, "tool_wear": 168.0}, {"machine_id": "l54191", "machine_type": "L", "failure_types": ["Power Failure"], "air_temp": 300.5, "process_temp": 310.5, "speed": 2633.0, "torque": 12.2, "tool_wear": 17.0}, {"machine_id": "l57002", "machine_type": "L", "failure_types": ["Overstrain Failure"], "air_temp": 298.5, "process_temp": 309.4, "speed": 1360.0, "torque": 60.9, "tool_wear": 187.0}, {"machine_id": "h30501", "machine_type": "H", "failure_types": ["Tool Wear Failure"], "air_temp": 296.9, "process_temp": 307.8, "speed": 1549.0, "torque": 35.8, "tool_wear": 206.0}, {"machine_id": "l51344", "machine_type": "L", "failure_types": ["Heat Dissipation Failure"], "air_temp": 302.2, "process_temp": 310.6, "speed": 1346.0, "torque": 47.5, "tool_wear": 109.0}, {"machine_id": "l51994", "machine_type": "L", "failure_types": ["Overstrain Failure"], "air_temp": 303.4, "process_temp": 311.8, "speed": 1401.0, "torque": 53.0, "tool_wear": 208.0}, {"machine_id": "l53428", "machine_type": "L", "failure_types": ["Power Failure", "Overstrain Failure"], "air_temp": 300.8, "process_temp": 310.1, "speed": 1405.0, "torque": 61.2, "tool_wear": 189.0}, {"machine_id": "l51550", "machine_type": "L", "failure_types": ["Heat Dissipation Failure", "Overstrain Failure"], "air_temp": 302.0, "process_temp": 309.9, "speed": 1308.0, "torque": 57.6, "tool_wear": 197.0}, {"machine_id": "l51260", "machine_type": "L", "failure_types": ["Heat Dissipation Failure"], "air_temp": 302.0, "process_temp": 310.4, "speed": 1357.0, "torque": 58.0, "tool_wear": 108.0}], "timeline_data": {"l50144": [{"hour": 0, "air_temp": 301.3, "process_temp": 309.3, "speed": 1677.6, "torque": 30.38, "tool_wear": 67.3}, {"hour": 1, "air_temp": 304.3, "process_temp": 310.1, "speed": 1707.1, "torque": 30.57, "tool_wear": 65.5}, {"hour": 2, "air_temp": 301.7, "process_temp": 311.9, "speed": 1674.3, "torque": 28.85, "tool_wear": 65.9}, {"hour": 3, "air_temp": 301.1, "process_temp": 311.3, "speed": 1672.2, "torque": 27.81, "tool_wear": 67.8}, {"hour": 4, "air_temp": 300.3, "process_temp": 307.2, "speed": 1676.9, "torque": 31.17, "tool_wear": 71.3}, {"hour": 5, "air_temp": 301.4, "process_temp": 308.9, "speed": 1676.9, "torque": 29.94, "tool_wear": 74.3}, {"hour": 6, "air_temp": 297.7, "process_temp": 312.9, "speed": 1703.5, "torque": 29.76, "tool_wear": 77.1}, {"hour": 7, "air_temp": 303.2, "process_temp": 308.9, "speed": 1687.7, "torque": 31.79, "tool_wear": 82.7}, {"hour": 8, "air_temp": 300.8, "process_temp": 307.3, "speed": 1682.6, "torque": 31.33, "tool_wear": 75.1}, {"hour": 9, "air_temp": 300.3, "process_temp": 310.2, "speed": 1673.5, "torque": 31.4, "tool_wear": 82.0}, {"hour": 10, "air_temp": 304.7, "process_temp": 311.2, "speed": 1672.8, "torque": 30.83, "tool_wear": 84.6}, {"hour": 11, "air_temp": 302.8, "process_temp": 308.1, "speed": 1674.1, "torque": 29.16, "tool_wear": 88.3}, {"hour": 12, "air_temp": 302.0, "process_temp": 308.0, "speed": 1694.5, "torque": 30.18, "tool_wear": 82.3}, {"hour": 13, "air_temp": 300.8, "process_temp": 310.1, "speed": 1730.6, "torque": 29.64, "tool_wear": 81.9}, {"hour": 14, "air_temp": 298.6, "process_temp": 307.9, "speed": 1683.5, "torque": 29.25, "tool_wear": 91.2}, {"hour": 15, "air_temp": 298.5, "process_temp": 309.8, "speed": 1732.0, "torque": 30.85, "tool_wear": 91.9}, {"hour": 16, "air_temp": 304.4, "process_temp": 312.2, "speed": 1703.3, "torque": 29.99, "tool_wear": 92.2}, {"hour": 17, "air_temp": 300.6, "process_temp": 309.0, "speed": 1696.2, "torque": 30.65, "tool_wear": 90.3}, {"hour": 18, "air_temp": 304.0, "process_temp": 310.6, "speed": 1686.7, "torque": 30.52, "tool_wear": 98.6}, {"hour": 19, "air_temp": 297.8, "process_temp": 309.6, "speed": 1668.3, "torque": 32.96, "tool_wear": 98.0}, {"hour": 20, "air_temp": 298.4, "process_temp": 317.0, "speed": 1681.3, "torque": 30.09, "tool_wear": 99.0}, {"hour": 21, "air_temp": 299.0, "process_temp": 310.3, "speed": 1647.8, "torque": 31.39, "tool_wear": 97.8}, {"hour": 22, "air_temp": 299.9, "process_temp": 311.3, "speed": 1687.9, "torque": 30.14, "tool_wear": 99.9}, {"hour": 23, "air_temp": 304.9, "process_temp": 310.9, "speed": 1670.3, "torque": 30.48, "tool_wear": 101.2}], "l53689": [{"hour": 0, "air_temp": 301.8, "process_temp": 311.4, "speed": 1552.0, "torque": 36.26, "tool_wear": 10.9}, {"hour": 1, "air_temp": 300.5, "process_temp": 310.2, "speed": 1588.5, "torque": 36.53, "tool_wear": 13.3}, {"hour": 2, "air_temp": 302.2, "process_temp": 311.0, "speed": 1551.0, "torque": 37.31, "tool_wear": 9.3}, {"hour": 3, "air_temp": 302.0, "process_temp": 309.9, "speed": 1583.3, "torque": 36.77, "tool_wear": 18.4}, {"hour": 4, "air_temp": 300.5, "process_temp": 309.0, "speed": 1570.9, "torque": 37.88, "tool_wear": 17.3}, {"hour": 5, "air_temp": 301.4, "process_temp": 310.8, "speed": 1570.8, "torque": 35.72, "tool_wear": 18.9}, {"hour": 6, "air_temp": 298.6, "process_temp": 308.0, "speed": 1565.1, "torque": 36.48, "tool_wear": 20.0}, {"hour": 7, "air_temp": 302.0, "process_temp": 310.4, "speed": 1541.5, "torque": 36.83, "tool_wear": 19.3}, {"hour": 8, "air_temp": 301.5, "process_temp": 309.3, "speed": 1574.5, "torque": 36.45, "tool_wear": 22.5}, {"hour": 9, "air_temp": 302.7, "process_temp": 309.0, "speed": 1548.6, "torque": 37.28, "tool_wear": 19.0}, {"hour": 10, "air_temp": 303.3, "process_temp": 310.1, "speed": 1561.7, "torque": 37.35, "tool_wear": 26.2}, {"hour": 11, "air_temp": 301.1, "process_temp": 311.9, "speed": 1550.6, "torque": 37.51, "tool_wear": 23.3}, {"hour": 12, "air_temp": 302.1, "process_temp": 309.5, "speed": 1537.8, "torque": 37.06, "tool_wear": 28.2}, {"hour": 13, "air_temp": 298.0, "process_temp": 305.9, "speed": 1561.0, "torque": 38.42, "tool_wear": 31.0}, {"hour": 14, "air_temp": 299.7, "process_temp": 312.3, "speed": 1582.1, "torque": 38.07, "tool_wear": 33.9}, {"hour": 15, "air_temp": 302.8, "process_temp": 311.6, "speed": 1554.4, "torque": 35.16, "tool_wear": 32.0}, {"hour": 16, "air_temp": 303.2, "process_temp": 309.4, "speed": 1561.1, "torque": 35.63, "tool_wear": 33.7}, {"hour": 17, "air_temp": 301.0, "process_temp": 311.1, "speed": 1554.8, "torque": 36.27, "tool_wear": 39.7}, {"hour": 18, "air_temp": 301.7, "process_temp": 311.0, "speed": 1594.6, "torque": 36.29, "tool_wear": 38.8}, {"hour": 19, "air_temp": 302.1, "process_temp": 308.4, "speed": 1568.6, "torque": 36.82, "tool_wear": 49.0}, {"hour": 20, "air_temp": 301.2, "process_temp": 312.5, "speed": 1580.6, "torque": 35.64, "tool_wear": 37.8}, {"hour": 21, "air_temp": 301.5, "process_temp": 312.7, "speed": 1569.8, "torque": 36.88, "tool_wear": 43.4}, {"hour": 22, "air_temp": 298.4, "process_temp": 308.2, "speed": 1531.6, "torque": 35.7, "tool_wear": 44.4}, {"hour": 23, "air_temp": 302.6, "process_temp": 309.3, "speed": 1569.1, "torque": 36.94, "tool_wear": 49.3}], "l47544": [{"hour": 0, "air_temp": 296.2, "process_temp": 305.1, "speed": 1453.1, "torque": 54.99, "tool_wear": 83.7}, {"hour": 1, "air_temp": 300.4, "process_temp": 310.3, "speed": 1430.7, "torque": 55.1, "tool_wear": 93.0}, {"hour": 2, "air_temp": 295.1, "process_temp": 307.4, "speed": 1414.8, "torque": 56.37, "tool_wear": 90.6}, {"hour": 3, "air_temp": 297.6, "process_temp": 307.6, "speed": 1430.5, "torque": 55.96, "tool_wear": 87.3}, {"hour": 4, "air_temp": 296.1, "process_temp": 307.5, "speed": 1393.5, "torque": 56.23, "tool_wear": 92.5}, {"hour": 5, "air_temp": 299.0, "process_temp": 309.0, "speed": 1411.8, "torque": 53.62, "tool_wear": 94.9}, {"hour": 6, "air_temp": 296.9, "process_temp": 308.6, "speed": 1397.5, "torque": 55.35, "tool_wear": 95.6}, {"hour": 7, "air_temp": 296.0, "process_temp": 309.2, "speed": 1398.0, "torque": 56.52, "tool_wear": 91.8}, {"hour": 8, "air_temp": 296.1, "process_temp": 308.0, "speed": 1388.5, "torque": 54.98, "tool_wear": 94.9}, {"hour": 9, "air_temp": 298.4, "process_temp": 310.8, "speed": 1408.4, "torque": 55.36, "tool_wear": 94.6}, {"hour": 10, "air_temp": 298.0, "process_temp": 307.9, "speed": 1420.6, "torque": 54.44, "tool_wear": 96.5}, {"hour": 11, "air_temp": 299.0, "process_temp": 312.8, "speed": 1403.5, "torque": 55.37, "tool_wear": 103.3}, {"hour": 12, "air_temp": 299.4, "process_temp": 309.9, "speed": 1405.1, "torque": 55.12, "tool_wear": 99.5}, {"hour": 13, "air_temp": 299.4, "process_temp": 309.8, "speed": 1421.3, "torque": 54.71, "tool_wear": 105.5}, {"hour": 14, "air_temp": 300.8, "process_temp": 306.5, "speed": 1401.1, "torque": 56.38, "tool_wear": 102.4}, {"hour": 15, "air_temp": 299.6, "process_temp": 309.0, "speed": 1413.6, "torque": 55.24, "tool_wear": 107.9}, {"hour": 16, "air_temp": 296.6, "process_temp": 307.2, "speed": 1436.3, "torque": 57.3, "tool_wear": 106.9}, {"hour": 17, "air_temp": 302.1, "process_temp": 307.5, "speed": 1396.4, "torque": 56.66, "tool_wear": 110.7}, {"hour": 18, "air_temp": 302.0, "process_temp": 310.0, "speed": 1386.7, "torque": 55.42, "tool_wear": 113.2}, {"hour": 19, "air_temp": 298.6, "process_temp": 308.6, "speed": 1416.7, "torque": 54.64, "tool_wear": 111.8}, {"hour": 20, "air_temp": 299.0, "process_temp": 308.2, "speed": 1426.6, "torque": 55.85, "tool_wear": 111.1}, {"hour": 21, "air_temp": 299.0, "process_temp": 308.7, "speed": 1394.2, "torque": 53.5, "tool_wear": 112.1}, {"hour": 22, "air_temp": 297.8, "process_temp": 309.5, "speed": 1415.8, "torque": 54.4, "tool_wear": 115.9}, {"hour": 23, "air_temp": 297.2, "process_temp": 309.0, "speed": 1395.0, "torque": 55.95, "tool_wear": 116.5}], "m15794": [{"hour": 0, "air_temp": 298.9, "process_temp": 304.7, "speed": 1353.6, "torque": 50.63, "tool_wear": 13.3}, {"hour": 1, "air_temp": 293.2, "process_temp": 306.4, "speed": 1346.7, "torque": 52.57, "tool_wear": 18.8}, {"hour": 2, "air_temp": 293.2, "process_temp": 306.6, "speed": 1309.5, "torque": 51.19, "tool_wear": 16.1}, {"hour": 3, "air_temp": 291.4, "process_temp": 308.7, "speed": 1321.5, "torque": 50.85, "tool_wear": 22.4}, {"hour": 4, "air_temp": 299.4, "process_temp": 307.5, "speed": 1328.1, "torque": 51.26, "tool_wear": 19.0}, {"hour": 5, "air_temp": 295.7, "process_temp": 306.4, "speed": 1310.3, "torque": 50.82, "tool_wear": 21.4}, {"hour": 6, "air_temp": 296.7, "process_temp": 307.0, "speed": 1299.2, "torque": 52.03, "tool_wear": 24.2}, {"hour": 7, "air_temp": 295.5, "process_temp": 307.0, "speed": 1321.7, "torque": 51.55, "tool_wear": 18.8}, {"hour": 8, "air_temp": 298.4, "process_temp": 307.6, "speed": 1340.5, "torque": 50.69, "tool_wear": 17.5}, {"hour": 9, "air_temp": 297.5, "process_temp": 303.4, "speed": 1343.9, "torque": 50.03, "tool_wear": 17.4}, {"hour": 10, "air_temp": 295.7, "process_temp": 308.5, "speed": 1306.7, "torque": 52.4, "tool_wear": 24.6}, {"hour": 11, "air_temp": 296.1, "process_temp": 305.3, "speed": 1318.7, "torque": 51.23, "tool_wear": 25.6}, {"hour": 12, "air_temp": 294.6, "process_temp": 304.6, "speed": 1321.7, "torque": 52.19, "tool_wear": 19.9}, {"hour": 13, "air_temp": 298.1, "process_temp": 306.3, "speed": 1292.9, "torque": 50.34, "tool_wear": 25.9}, {"hour": 14, "air_temp": 299.4, "process_temp": 303.6, "speed": 1269.6, "torque": 49.49, "tool_wear": 27.9}, {"hour": 15, "air_temp": 292.3, "process_temp": 309.3, "speed": 1350.3, "torque": 50.99, "tool_wear": 23.1}, {"hour": 16, "air_temp": 296.0, "process_temp": 307.5, "speed": 1335.2, "torque": 52.54, "tool_wear": 24.6}, {"hour": 17, "air_temp": 293.3, "process_temp": 303.4, "speed": 1292.5, "torque": 51.0, "tool_wear": 25.2}, {"hour": 18, "air_temp": 296.0, "process_temp": 305.3, "speed": 1303.8, "torque": 51.41, "tool_wear": 19.0}, {"hour": 19, "air_temp": 294.3, "process_temp": 307.9, "speed": 1308.0, "torque": 51.19, "tool_wear": 24.4}, {"hour": 20, "air_temp": 295.1, "process_temp": 307.5, "speed": 1300.4, "torque": 51.55, "tool_wear": 27.4}, {"hour": 21, "air_temp": 298.5, "process_temp": 306.8, "speed": 1304.6, "torque": 52.53, "tool_wear": 24.8}, {"hour": 22, "air_temp": 295.6, "process_temp": 308.3, "speed": 1288.4, "torque": 52.24, "tool_wear": 24.7}, {"hour": 23, "air_temp": 295.1, "process_temp": 307.0, "speed": 1325.2, "torque": 51.59, "tool_wear": 23.9}], "m23511": [{"hour": 0, "air_temp": 295.8, "process_temp": 310.7, "speed": 1583.4, "torque": 35.29, "tool_wear": 104.9}, {"hour": 1, "air_temp": 296.9, "process_temp": 307.4, "speed": 1537.3, "torque": 36.53, "tool_wear": 104.1}, {"hour": 2, "air_temp": 297.7, "process_temp": 306.7, "speed": 1558.8, "torque": 37.85, "tool_wear": 104.2}, {"hour": 3, "air_temp": 300.6, "process_temp": 308.5, "speed": 1577.6, "torque": 36.24, "tool_wear": 107.9}, {"hour": 4, "air_temp": 297.1, "process_temp": 308.3, "speed": 1561.0, "torque": 36.86, "tool_wear": 103.4}, {"hour": 5, "air_temp": 294.4, "process_temp": 305.3, "speed": 1546.1, "torque": 35.7, "tool_wear": 110.8}, {"hour": 6, "air_temp": 296.8, "process_temp": 308.7, "speed": 1541.7, "torque": 33.98, "tool_wear": 111.0}, {"hour": 7, "air_temp": 300.3, "process_temp": 307.9, "speed": 1596.7, "torque": 35.97, "tool_wear": 114.7}, {"hour": 8, "air_temp": 297.7, "process_temp": 311.9, "speed": 1607.6, "torque": 34.59, "tool_wear": 110.2}, {"hour": 9, "air_temp": 296.5, "process_temp": 306.6, "speed": 1541.3, "torque": 34.19, "tool_wear": 112.2}, {"hour": 10, "air_temp": 297.0, "process_temp": 309.5, "speed": 1569.3, "torque": 34.53, "tool_wear": 111.9}, {"hour": 11, "air_temp": 297.6, "process_temp": 308.4, "speed": 1547.8, "torque": 35.08, "tool_wear": 111.0}, {"hour": 12, "air_temp": 296.4, "process_temp": 310.3, "speed": 1576.5, "torque": 36.11, "tool_wear": 110.4}, {"hour": 13, "air_temp": 297.9, "process_temp": 309.6, "speed": 1554.0, "torque": 35.57, "tool_wear": 115.7}, {"hour": 14, "air_temp": 299.9, "process_temp": 312.1, "speed": 1576.9, "torque": 35.15, "tool_wear": 114.3}, {"hour": 15, "air_temp": 298.8, "process_temp": 307.1, "speed": 1528.7, "torque": 35.46, "tool_wear": 119.3}, {"hour": 16, "air_temp": 298.5, "process_temp": 312.5, "speed": 1560.5, "torque": 33.05, "tool_wear": 119.1}, {"hour": 17, "air_temp": 298.3, "process_temp": 311.4, "speed": 1538.4, "torque": 35.41, "tool_wear": 114.6}, {"hour": 18, "air_temp": 299.8, "process_temp": 311.0, "speed": 1574.7, "torque": 35.07, "tool_wear": 113.6}, {"hour": 19, "air_temp": 301.0, "process_temp": 311.6, "speed": 1543.1, "torque": 34.1, "tool_wear": 121.7}, {"hour": 20, "air_temp": 299.2, "process_temp": 307.8, "speed": 1569.5, "torque": 34.36, "tool_wear": 119.7}, {"hour": 21, "air_temp": 298.9, "process_temp": 309.0, "speed": 1586.2, "torque": 32.53, "tool_wear": 121.5}, {"hour": 22, "air_temp": 301.7, "process_temp": 308.4, "speed": 1582.8, "torque": 34.04, "tool_wear": 118.6}, {"hour": 23, "air_temp": 298.4, "process_temp": 311.6, "speed": 1529.1, "torque": 36.64, "tool_wear": 120.4}], "m16152": [{"hour": 0, "air_temp": 295.6, "process_temp": 312.5, "speed": 1875.0, "torque": 24.07, "tool_wear": 119.2}, {"hour": 1, "air_temp": 299.8, "process_temp": 311.3, "speed": 1856.0, "torque": 23.14, "tool_wear": 118.2}, {"hour": 2, "air_temp": 300.1, "process_temp": 309.6, "speed": 1883.5, "torque": 24.42, "tool_wear": 117.4}, {"hour": 3, "air_temp": 295.2, "process_temp": 308.7, "speed": 1902.9, "torque": 24.14, "tool_wear": 116.2}, {"hour": 4, "air_temp": 299.2, "process_temp": 311.1, "speed": 1855.2, "torque": 25.04, "tool_wear": 119.7}, {"hour": 5, "air_temp": 296.6, "process_temp": 311.4, "speed": 1859.8, "torque": 23.62, "tool_wear": 115.2}, {"hour": 6, "air_temp": 300.0, "process_temp": 309.4, "speed": 1881.5, "torque": 23.25, "tool_wear": 116.3}, {"hour": 7, "air_temp": 297.3, "process_temp": 310.5, "speed": 1854.4, "torque": 23.6, "tool_wear": 116.8}, {"hour": 8, "air_temp": 299.7, "process_temp": 306.3, "speed": 1872.9, "torque": 25.53, "tool_wear": 122.1}, {"hour": 9, "air_temp": 297.6, "process_temp": 310.7, "speed": 1874.0, "torque": 25.27, "tool_wear": 110.9}, {"hour": 10, "air_temp": 301.0, "process_temp": 309.2, "speed": 1853.1, "torque": 23.03, "tool_wear": 114.6}, {"hour": 11, "air_temp": 297.6, "process_temp": 307.6, "speed": 1871.6, "torque": 24.39, "tool_wear": 117.7}, {"hour": 12, "air_temp": 301.8, "process_temp": 308.6, "speed": 1861.8, "torque": 23.33, "tool_wear": 120.4}, {"hour": 13, "air_temp": 300.2, "process_temp": 310.7, "speed": 1865.5, "torque": 22.46, "tool_wear": 117.7}, {"hour": 14, "air_temp": 301.8, "process_temp": 311.8, "speed": 1873.9, "torque": 23.42, "tool_wear": 118.6}, {"hour": 15, "air_temp": 298.1, "process_temp": 312.1, "speed": 1851.2, "torque": 24.72, "tool_wear": 117.1}, {"hour": 16, "air_temp": 301.5, "process_temp": 310.6, "speed": 1853.0, "torque": 23.49, "tool_wear": 120.9}, {"hour": 17, "air_temp": 297.9, "process_temp": 309.8, "speed": 1857.7, "torque": 25.56, "tool_wear": 124.6}, {"hour": 18, "air_temp": 301.8, "process_temp": 309.5, "speed": 1859.9, "torque": 23.02, "tool_wear": 123.5}, {"hour": 19, "air_temp": 300.8, "process_temp": 311.7, "speed": 1863.0, "torque": 22.04, "tool_wear": 114.3}, {"hour": 20, "air_temp": 299.0, "process_temp": 308.7, "speed": 1855.2, "torque": 24.15, "tool_wear": 122.0}, {"hour": 21, "air_temp": 297.5, "process_temp": 307.2, "speed": 1854.5, "torque": 22.76, "tool_wear": 120.8}, {"hour": 22, "air_temp": 298.9, "process_temp": 313.5, "speed": 1882.7, "torque": 25.61, "tool_wear": 114.8}, {"hour": 23, "air_temp": 292.4, "process_temp": 310.3, "speed": 1870.5, "torque": 23.68, "tool_wear": 119.4}], "h31066": [{"hour": 0, "air_temp": 301.0, "process_temp": 310.2, "speed": 1622.5, "torque": 33.28, "tool_wear": 144.0}, {"hour": 1, "air_temp": 298.5, "process_temp": 307.1, "speed": 1649.4, "torque": 32.56, "tool_wear": 142.4}, {"hour": 2, "air_temp": 295.7, "process_temp": 305.6, "speed": 1620.9, "torque": 34.36, "tool_wear": 140.1}, {"hour": 3, "air_temp": 295.8, "process_temp": 309.0, "speed": 1664.9, "torque": 34.64, "tool_wear": 147.6}, {"hour": 4, "air_temp": 301.2, "process_temp": 307.2, "speed": 1647.6, "torque": 33.91, "tool_wear": 145.5}, {"hour": 5, "air_temp": 298.3, "process_temp": 306.7, "speed": 1662.5, "torque": 34.32, "tool_wear": 140.4}, {"hour": 6, "air_temp": 297.6, "process_temp": 307.0, "speed": 1615.0, "torque": 33.52, "tool_wear": 143.5}, {"hour": 7, "air_temp": 298.9, "process_temp": 307.6, "speed": 1664.9, "torque": 31.99, "tool_wear": 143.4}, {"hour": 8, "air_temp": 298.6, "process_temp": 306.6, "speed": 1642.3, "torque": 33.78, "tool_wear": 146.3}, {"hour": 9, "air_temp": 300.7, "process_temp": 312.5, "speed": 1625.3, "torque": 35.4, "tool_wear": 139.1}, {"hour": 10, "air_temp": 298.9, "process_temp": 307.8, "speed": 1647.0, "torque": 34.58, "tool_wear": 140.0}, {"hour": 11, "air_temp": 300.6, "process_temp": 308.1, "speed": 1618.7, "torque": 33.99, "tool_wear": 138.4}, {"hour": 12, "air_temp": 301.2, "process_temp": 308.8, "speed": 1634.3, "torque": 33.91, "tool_wear": 147.8}, {"hour": 13, "air_temp": 302.5, "process_temp": 311.7, "speed": 1633.3, "torque": 32.88, "tool_wear": 142.9}, {"hour": 14, "air_temp": 300.2, "process_temp": 310.7, "speed": 1641.2, "torque": 32.97, "tool_wear": 141.4}, {"hour": 15, "air_temp": 298.5, "process_temp": 310.3, "speed": 1646.3, "torque": 34.69, "tool_wear": 144.0}, {"hour": 16, "air_temp": 295.7, "process_temp": 305.9, "speed": 1632.2, "torque": 34.1, "tool_wear": 146.9}, {"hour": 17, "air_temp": 300.1, "process_temp": 307.5, "speed": 1648.2, "torque": 33.98, "tool_wear": 142.0}, {"hour": 18, "air_temp": 296.9, "process_temp": 309.7, "speed": 1639.6, "torque": 33.0, "tool_wear": 145.5}, {"hour": 19, "air_temp": 301.5, "process_temp": 309.7, "speed": 1635.2, "torque": 34.95, "tool_wear": 144.5}, {"hour": 20, "air_temp": 298.9, "process_temp": 309.3, "speed": 1646.1, "torque": 31.97, "tool_wear": 140.6}, {"hour": 21, "air_temp": 301.8, "process_temp": 312.2, "speed": 1655.4, "torque": 34.89, "tool_wear": 143.9}, {"hour": 22, "air_temp": 298.5, "process_temp": 309.5, "speed": 1595.1, "torque": 35.3, "tool_wear": 141.1}, {"hour": 23, "air_temp": 299.6, "process_temp": 312.1, "speed": 1602.7, "torque": 32.81, "tool_wear": 144.4}], "h31603": [{"hour": 0, "air_temp": 300.9, "process_temp": 310.0, "speed": 1551.2, "torque": 40.7, "tool_wear": 66.8}, {"hour": 1, "air_temp": 299.6, "process_temp": 308.3, "speed": 1574.3, "torque": 41.53, "tool_wear": 65.3}, {"hour": 2, "air_temp": 298.9, "process_temp": 311.2, "speed": 1573.6, "torque": 42.92, "tool_wear": 60.6}, {"hour": 3, "air_temp": 299.6, "process_temp": 313.1, "speed": 1549.1, "torque": 42.41, "tool_wear": 69.9}, {"hour": 4, "air_temp": 296.0, "process_temp": 308.7, "speed": 1554.0, "torque": 39.8, "tool_wear": 62.0}, {"hour": 5, "air_temp": 297.8, "process_temp": 310.9, "speed": 1519.3, "torque": 43.49, "tool_wear": 65.8}, {"hour": 6, "air_temp": 297.6, "process_temp": 311.3, "speed": 1565.9, "torque": 41.56, "tool_wear": 61.9}, {"hour": 7, "air_temp": 300.8, "process_temp": 309.5, "speed": 1540.2, "torque": 40.26, "tool_wear": 61.8}, {"hour": 8, "air_temp": 298.7, "process_temp": 311.6, "speed": 1557.5, "torque": 41.15, "tool_wear": 63.5}, {"hour": 9, "air_temp": 301.7, "process_temp": 309.8, "speed": 1559.1, "torque": 40.9, "tool_wear": 64.7}, {"hour": 10, "air_temp": 299.8, "process_temp": 309.1, "speed": 1568.7, "torque": 42.37, "tool_wear": 62.7}, {"hour": 11, "air_temp": 298.8, "process_temp": 307.9, "speed": 1581.8, "torque": 43.85, "tool_wear": 64.4}, {"hour": 12, "air_temp": 299.4, "process_temp": 310.9, "speed": 1539.9, "torque": 42.46, "tool_wear": 66.0}, {"hour": 13, "air_temp": 296.3, "process_temp": 306.7, "speed": 1547.2, "torque": 42.82, "tool_wear": 63.8}, {"hour": 14, "air_temp": 298.7, "process_temp": 309.7, "speed": 1520.6, "torque": 41.9, "tool_wear": 62.1}, {"hour": 15, "air_temp": 300.9, "process_temp": 307.7, "speed": 1535.2, "torque": 41.87, "tool_wear": 69.5}, {"hour": 16, "air_temp": 300.5, "process_temp": 309.7, "speed": 1558.4, "torque": 41.98, "tool_wear": 68.8}, {"hour": 17, "air_temp": 299.0, "process_temp": 310.6, "speed": 1538.0, "torque": 42.69, "tool_wear": 70.1}, {"hour": 18, "air_temp": 304.2, "process_temp": 310.3, "speed": 1572.2, "torque": 40.04, "tool_wear": 71.0}, {"hour": 19, "air_temp": 302.2, "process_temp": 312.3, "speed": 1556.4, "torque": 41.26, "tool_wear": 65.2}, {"hour": 20, "air_temp": 297.8, "process_temp": 309.2, "speed": 1519.0, "torque": 40.83, "tool_wear": 69.1}, {"hour": 21, "air_temp": 300.0, "process_temp": 307.4, "speed": 1529.3, "torque": 40.52, "tool_wear": 68.5}, {"hour": 22, "air_temp": 304.1, "process_temp": 311.4, "speed": 1558.3, "torque": 42.15, "tool_wear": 72.6}, {"hour": 23, "air_temp": 301.2, "process_temp": 308.7, "speed": 1537.1, "torque": 41.47, "tool_wear": 72.9}]}};</script>
 
@@ -976,6 +1021,163 @@ window.toggleFullscreen = function(){
 };
 function showToast(msg){
   triggerToast('Notification', msg, 'info');
+}
+
+/* Fullscreen Popup Chart Modal Handlers */
+let _modalChart = null;
+let _currentModalType = 'trend';
+
+window.openChartModal = function(type){
+  _currentModalType = type || 'trend';
+  const modal = document.getElementById('chartModal');
+  const selEl = document.getElementById('cmMachineSelect');
+  
+  selEl.innerHTML = M.map(m => `<option value="${m.id}" ${m.id === (sel || M[0].id) ? 'selected' : ''}>${m.name}</option>`).join('');
+  selEl.style.display = (type === 'trend') ? 'block' : 'none';
+  
+  renderModalContent();
+  modal.classList.add('on');
+};
+
+window.closeChartModal = function(){
+  const modal = document.getElementById('chartModal');
+  modal.classList.remove('on');
+  if(_modalChart){ _modalChart.destroy(); _modalChart = null; }
+};
+
+window.switchModalMachine = function(mId){
+  sel = mId;
+  selM(mId);
+  renderModalContent();
+};
+
+window.toggleModalFullscreen = function(){
+  const card = document.querySelector('.chart-modal-card');
+  if(card){
+    if(!document.fullscreenElement){
+      card.requestFullscreen().catch(()=>{});
+    } else {
+      document.exitFullscreen();
+    }
+  }
+};
+
+function renderModalContent(){
+  const mid = sel || (M.length > 0 ? M[0].id : null);
+  if(!mid) return;
+  const m = M.find(x => x.id === mid) || M[0];
+  const titleEl = document.getElementById('cmTitle');
+  const tableWrap = document.getElementById('cmTableWrap');
+  
+  if(_modalChart){ _modalChart.destroy(); _modalChart = null; }
+  const canvas = document.getElementById('cmCanvas');
+  
+  if(_currentModalType === 'trend'){
+    titleEl.textContent = `24-Hour Telemetry & Sensor Analytics — ${m.name}`;
+    const tl = TL[m.id] || [];
+    const labels = tl.map(e => e.hour + 'h');
+    
+    _modalChart = new Chart(canvas, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [
+          {label:'Air Temp (K)', data:tl.map(e=>e.air_temp), borderColor:'#0891b2', tension:.3, pointRadius:2, borderWidth:2, fill:false},
+          {label:'Process Temp (K)', data:tl.map(e=>e.process_temp), borderColor:'#3b82f6', tension:.3, pointRadius:2, borderWidth:2, fill:false},
+          {label:'Speed (x10 rpm)', data:tl.map(e=>parseFloat((e.speed/10).toFixed(1))), borderColor:'#8b5cf6', tension:.3, pointRadius:2, borderWidth:2, fill:false},
+          {label:'Torque (Nm)', data:tl.map(e=>e.torque), borderColor:'#ef4444', tension:.3, pointRadius:2, borderWidth:2, fill:false},
+          {label:'Tool Wear (min)', data:tl.map(e=>e.tool_wear), borderColor:'#f59e0b', tension:.3, pointRadius:2, borderWidth:2, borderDash:[4,4], fill:false}
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {display: true, position: 'top', labels: {boxWidth: 10, font: {size: 11}}},
+          tooltip: {enabled: true, mode: 'index', intersect: false}
+        },
+        scales: {
+          x: {display: true, grid: {color: '#f1f5f9'}},
+          y: {display: true, grid: {color: '#f1f5f9'}}
+        }
+      }
+    });
+
+    let rows = tl.map(e => `
+      <tr>
+        <td><strong>${e.hour}:00</strong></td>
+        <td>${e.air_temp.toFixed(1)} K</td>
+        <td>${e.process_temp.toFixed(1)} K</td>
+        <td>${e.speed.toFixed(0)} rpm</td>
+        <td>${e.torque.toFixed(1)} Nm</td>
+        <td>${e.tool_wear.toFixed(0)} min</td>
+      </tr>
+    `).join('');
+    tableWrap.innerHTML = `
+      <h4 style="font-size:12px;font-weight:700;margin-bottom:8px;color:var(--text)">Historical Telemetry Stream Logs (24 Hours)</h4>
+      <table class="cm-table">
+        <thead>
+          <tr><th>Timestamp</th><th>Air Temp</th><th>Process Temp</th><th>Speed</th><th>Torque</th><th>Tool Wear</th></tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
+
+  } else if(_currentModalType === 'failure'){
+    titleEl.textContent = 'Failure Distribution Analytics — UCI AI4I 2020';
+    const fd = OS.failure_distribution;
+    _modalChart = new Chart(canvas, {
+      type: 'doughnut',
+      data: {
+        labels: Object.keys(fd),
+        datasets: [{data: Object.values(fd), backgroundColor: ['#f59e0b','#ef4444','#3b82f6','#8b5cf6','#94a3b8'], borderWidth: 0}]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {legend: {display: true, position: 'right'}}
+      }
+    });
+    tableWrap.innerHTML = `
+      <h4 style="font-size:12px;font-weight:700;margin-bottom:8px;color:var(--text)">Failure Mode Breakdown</h4>
+      <table class="cm-table">
+        <thead><tr><th>Failure Type</th><th>Occurrences</th><th>Percentage</th></tr></thead>
+        <tbody>
+          ${Object.entries(fd).map(([k,v]) => `<tr><td><strong>${k}</strong></td><td>${v}</td><td>${((v/373)*100).toFixed(1)}%</td></tr>`).join('')}
+        </tbody>
+      </table>
+    `;
+
+  } else if(_currentModalType === 'risk'){
+    titleEl.textContent = 'AI Failure Risk Matrix Across Fleet';
+    _modalChart = new Chart(canvas, {
+      type: 'bar',
+      data: {
+        labels: M.map(m => m.name),
+        datasets: [{
+          label: 'AI Failure Risk (%)',
+          data: M.map(m => (m.failure_risk * 100).toFixed(1)),
+          backgroundColor: M.map(m => m.failure_risk > .4 ? '#ef4444' : m.failure_risk > .15 ? '#f59e0b' : '#10b981'),
+          borderRadius: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {legend: {display: false}},
+        scales: {x: {grid: {display: false}}, y: {min: 0, max: 100}}
+      }
+    });
+    tableWrap.innerHTML = `
+      <h4 style="font-size:12px;font-weight:700;margin-bottom:8px;color:var(--text)">Fleet Risk & Maintenance Status</h4>
+      <table class="cm-table">
+        <thead><tr><th>Machine</th><th>Type</th><th>Status</th><th>AI Risk %</th><th>Maint Status</th></tr></thead>
+        <tbody>
+          ${M.map(m => `<tr><td><strong>${m.name}</strong></td><td>${m.type}</td><td><span style="color:${m.status==='critical'?'var(--red)':m.status==='warning'?'var(--amber)':'var(--green)'};font-weight:700">${m.status.toUpperCase()}</span></td><td>${(m.failure_risk*100).toFixed(1)}%</td><td>${m.days_since_maint}d / ${m.maint_interval_days}d</td></tr>`).join('')}
+        </tbody>
+      </table>
+    `;
+  }
 }
 </script>
 </body>
