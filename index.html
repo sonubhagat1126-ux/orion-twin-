@@ -217,6 +217,7 @@ footer a{color:var(--blue);text-decoration:none;pointer-events:auto}
 <nav>
   <button class="nav-item active" data-tab="machines" onclick="switchTab('machines')">&#9881; Fleet Machines</button>
   <div class="nav-ctrl">
+    <button onclick="exportTelemetryCSV()" title="Export Telemetry CSV Report" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;font-size:11px;font-weight:600;color:var(--cyan);border:1px solid rgba(8,145,178,0.3);border-radius:6px;background:rgba(8,145,178,0.06);cursor:pointer;margin-right:8px;font-family:var(--font)">📥 Export CSV</button>
     <button class="nav-btn" onclick="resetCamera()" title="Reset View">&#9673;</button>
     <button class="nav-btn" onclick="toggleFullscreen()" title="Fullscreen">&#9974;</button>
   </div>
@@ -241,6 +242,10 @@ footer a{color:var(--blue);text-decoration:none;pointer-events:auto}
   <div class="db"><strong>&#9432;</strong> UCI AI4I 2020 &middot; 10K samples</div>
   <div class="tt" id="tt3d"></div>
   <div class="vp-controls">
+    <button class="vp-btn" onclick="setCamPreset('overview')" title="Overview View">🌐</button>
+    <button class="vp-btn" onclick="setCamPreset('mill')" title="Mill Line View">🔩</button>
+    <button class="vp-btn" onclick="setCamPreset('lathe')" title="Lathe Line View">⚙</button>
+    <button class="vp-btn" onclick="setCamPreset('gantry')" title="Gantry Line View">🏗</button>
     <button class="vp-btn" onclick="resetCamera()" title="Reset View">&#9673;</button>
     <button class="vp-btn" onclick="zoomIn()" title="Zoom In">+</button>
     <button class="vp-btn" onclick="zoomOut()" title="Zoom Out">&minus;</button>
@@ -720,6 +725,32 @@ function recalcMachine(m){
   m.status = m.failure_risk > 0.45 ? 'critical' : m.failure_risk > 0.18 ? 'warning' : 'normal';
 }
 
+window.setCamPreset = function(preset){
+  if(preset === 'overview'){
+    cam.position.set(18,12,16); ctrl.target.set(0,1.5,0);
+  }else if(preset === 'mill'){
+    cam.position.set(-8,6,6); ctrl.target.set(-5,1.5,-2);
+  }else if(preset === 'lathe'){
+    cam.position.set(6,6,12); ctrl.target.set(4,1.5,2);
+  }else if(preset === 'gantry'){
+    cam.position.set(0,6,-16); ctrl.target.set(0,1.5,-8);
+  }
+  ctrl.update();
+};
+
+window.exportTelemetryCSV = function(){
+  let csv = 'Machine ID,Machine Name,Type,Product Line,Air Temp (K),Process Temp (K),Speed (rpm),Torque (Nm),Tool Wear (min),Power (kW),Failure Risk (%),Status,Days Since Maint\n';
+  M.forEach(m => {
+    csv += `"${m.id}","${m.name}","${m.type}","${m.productType}",${m.sensors.air_temp},${m.sensors.process_temp},${m.sensors.speed},${m.sensors.torque},${m.sensors.tool_wear},${m.sensors.power},${(m.failure_risk*100).toFixed(1)},"${m.status}",${m.days_since_maint}\n`;
+  });
+  const blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `orion_digital_twin_telemetry_${Date.now()}.csv`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  triggerToast('Data Exporter', 'Telemetry dataset exported successfully as CSV.', 'info');
+};
+
 function showInsp(id){
   const m=M.find(x=>x.id===id);if(!m)return;
   document.getElementById('inspT').textContent=m.name;
@@ -734,7 +765,8 @@ function showInsp(id){
       </div>`;
     g.innerHTML+='<div class="sc" onclick="window.promptSensor(\''+m.id+'\',\''+k+'\')"><div class="sl">'+k.replace('_',' ')+'</div><div class="sv" style="color:'+col+'">'+(typeof v==='number'?v.toFixed(1):v)+'</div><div class="su">'+(r?r.unit:'')+'</div>'+ctrls+'</div>';
   }
-  document.getElementById('inspM').textContent='Days since maint: '+m.days_since_maint+' \u00b7 Interval: '+m.maint_interval_days+'d';
+  const rulHours = Math.max(0, Math.round((250 - m.sensors.tool_wear) * 3.2));
+  document.getElementById('inspM').textContent='Days since maint: '+m.days_since_maint+'d \u00b7 RUL: '+rulHours+' hrs';
   document.getElementById('inspAI').innerHTML='<span class="ai">AI</span> Failure risk: '+(m.failure_risk*100).toFixed(1)+'%'+(m.failure_risk>.45?' \u2014 Schedule inspection':m.failure_risk>.18?' \u2014 Monitor closely':'');
   document.getElementById('insp').classList.add('on');
 }
