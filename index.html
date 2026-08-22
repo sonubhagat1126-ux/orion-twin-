@@ -243,7 +243,7 @@ footer a{color:var(--blue);text-decoration:none;pointer-events:auto}
       </div>
     </div>
     <div class="sec"><div class="sec-title">Failure Distribution</div><div class="chart-box chart-sm"><canvas id="fc"></canvas></div></div>
-    <div class="sec"><div class="sec-title">Sensor Trends (24h)</div><div class="chart-box chart-md"><canvas id="tc"></canvas></div></div>
+    <div class="sec"><div class="sec-title sec-title-trend">Sensor Trends (24h)</div><div class="chart-box chart-md"><canvas id="tc"></canvas></div></div>
   </div>
   <!-- Machines tab content (hidden right panel) -->
   <div class="tab-content" data-tab="machines"></div>
@@ -261,7 +261,7 @@ footer a{color:var(--blue);text-decoration:none;pointer-events:auto}
     </div>
     <div class="sec"><div class="sec-title">Failure Distribution</div><div class="chart-box chart-md"><canvas id="fc2"></canvas></div></div>
     <div class="sec"><div class="sec-title">Risk Assessment</div><div class="chart-box chart-md"><canvas id="rc"></canvas></div></div>
-    <div class="sec"><div class="sec-title">Sensor Trends (24h)</div><div class="chart-box chart-lg"><canvas id="tc2"></canvas></div></div>
+    <div class="sec"><div class="sec-title sec-title-trend">Sensor Trends (24h)</div><div class="chart-box chart-lg"><canvas id="tc2"></canvas></div></div>
   </div>
   <!-- Alerts tab content (hidden right panel) -->
   <div class="tab-content" data-tab="alerts"></div>
@@ -604,7 +604,7 @@ rnd.domElement.addEventListener('mousemove',e=>{
 rnd.domElement.addEventListener('click',e=>{const id=findM(ints(e));if(id)selM(id);});
 
 function selM(id){
-  sel=id;upML();showInsp(id);
+  sel=id;upML();showInsp(id);initCharts(id);
   const g=mgs[id];if(!g)return;
   const t=new THREE.Vector3();g.getWorldPosition(t);
   const b=new THREE.Box3().setFromObject(g);const d=Math.max(b.getSize(new THREE.Vector3()).length()*1.4,6);
@@ -757,23 +757,69 @@ addA('sys','System','info','Orion Digital Twin initialized \u2014 UCI AI4I 2020 
 setTimeout(()=>addA('data','Dataset','info','5 failure modes: Tool Wear, Heat Dissipation, Power, Overstrain, Random'),3000);
 
 // Charts
-function initCharts(){
-  const fd=OS.failure_distribution;
-  const chartDefaults={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},animation:{duration:800,easing:'easeOutQuart'}};
-  try{new Chart(document.getElementById('fc'),{type:'doughnut',data:{labels:Object.keys(fd),datasets:[{data:Object.values(fd),backgroundColor:['#f59e0b','#ef4444','#3b82f6','#8b5cf6','#94a3b8'],borderWidth:0}]},options:{...chartDefaults,cutout:'65%'}});}catch(e){}
-  try{new Chart(document.getElementById('fc2'),{type:'doughnut',data:{labels:Object.keys(fd),datasets:[{data:Object.values(fd),backgroundColor:['#f59e0b','#ef4444','#3b82f6','#8b5cf6','#94a3b8'],borderWidth:0}]},options:{...chartDefaults,cutout:'65%'}});}catch(e){}
-  try{new Chart(document.getElementById('rc'),{type:'bar',data:{labels:M.map(m=>m.name.split(' ').slice(-1)[0]),datasets:[{data:M.map(m=>(m.failure_risk*100).toFixed(1)),backgroundColor:M.map(m=>m.failure_risk>.4?'#ef4444':m.failure_risk>.15?'#f59e0b':'#10b981'),borderRadius:4,borderWidth:0}]},options:{...chartDefaults,indexAxis:'y',scales:{x:{display:false,min:0,max:100},y:{ticks:{color:'#7b8799',font:{size:9}}}}}});}catch(e){}
+let _chartFC=null, _chartFC2=null, _chartRC=null, _chartTC=null, _chartTC2=null;
 
-  const mid=M[0].id,tl=TL[mid];
-  const trendOpts={...chartDefaults,scales:{x:{display:false},y:{display:false}}};
+function initCharts(targetId){
+  const mid = targetId || sel || (M.length > 0 ? M[0].id : null);
+  if(!mid) return;
+  const targetMachine = M.find(x => x.id === mid) || M[0];
+  const tl = TL[mid] || (M.length > 0 ? TL[M[0].id] : []);
+
+  // Update Section Title with target machine name
+  const titles = document.querySelectorAll('.sec-title-trend');
+  titles.forEach(el => {
+    el.innerHTML = `Sensor Trends (24h) <span style="font-size:10px;font-weight:600;color:var(--cyan);background:rgba(8,145,178,0.1);padding:2px 6px;border-radius:4px;margin-left:4px">${targetMachine.name}</span>`;
+  });
+
+  const fd=OS.failure_distribution;
+  const chartDefaults={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},animation:{duration:500,easing:'easeOutQuart'}};
+
+  try{
+    if(_chartFC) _chartFC.destroy();
+    _chartFC = new Chart(document.getElementById('fc'),{type:'doughnut',data:{labels:Object.keys(fd),datasets:[{data:Object.values(fd),backgroundColor:['#f59e0b','#ef4444','#3b82f6','#8b5cf6','#94a3b8'],borderWidth:0}]},options:{...chartDefaults,cutout:'65%'}});
+  }catch(e){}
+
+  try{
+    if(_chartFC2) _chartFC2.destroy();
+    _chartFC2 = new Chart(document.getElementById('fc2'),{type:'doughnut',data:{labels:Object.keys(fd),datasets:[{data:Object.values(fd),backgroundColor:['#f59e0b','#ef4444','#3b82f6','#8b5cf6','#94a3b8'],borderWidth:0}]},options:{...chartDefaults,cutout:'65%'}});
+  }catch(e){}
+
+  try{
+    if(_chartRC) _chartRC.destroy();
+    _chartRC = new Chart(document.getElementById('rc'),{type:'bar',data:{labels:M.map(m=>m.name.split(' ').slice(-1)[0]),datasets:[{data:M.map(m=>(m.failure_risk*100).toFixed(1)),backgroundColor:M.map(m=>m.id===mid?'#0891b2':m.failure_risk>.4?'#ef4444':m.failure_risk>.15?'#f59e0b':'#10b981'),borderRadius:4,borderWidth:0}]},options:{...chartDefaults,indexAxis:'y',scales:{x:{display:false,min:0,max:100},y:{ticks:{color:'#7b8799',font:{size:9}}}}}});
+  }catch(e){}
+
+  const trendOpts={
+    ...chartDefaults,
+    interaction:{mode:'index',intersect:false},
+    plugins:{
+      legend:{display:true,position:'bottom',labels:{boxWidth:6,font:{size:8},color:'#7b8799',padding:6}},
+      tooltip:{enabled:true,bodyFontSize:10,titleFontSize:10}
+    },
+    scales:{
+      x:{display:true,grid:{display:false},ticks:{color:'#a0aec0',font:{size:8}}},
+      y:{display:true,grid:{color:'#f1f5f9'},ticks:{color:'#a0aec0',font:{size:8}}}
+    }
+  };
+
   const trendSets=(tl?[
-    {data:tl.map(e=>e.air_temp),borderColor:'#0891b2',tension:.3,pointRadius:0,borderWidth:2,fill:false},
-    {data:tl.map(e=>e.process_temp),borderColor:'#3b82f6',tension:.3,pointRadius:0,borderWidth:2,fill:false},
-    {data:tl.map(e=>e.tool_wear),borderColor:'#f59e0b',tension:.3,pointRadius:0,borderWidth:2,borderDash:[3,3],fill:false}
+    {label:'Air Temp (K)', data:tl.map(e=>e.air_temp), borderColor:'#0891b2', tension:.3, pointRadius:1, borderWidth:1.5, fill:false},
+    {label:'Process Temp (K)', data:tl.map(e=>e.process_temp), borderColor:'#3b82f6', tension:.3, pointRadius:1, borderWidth:1.5, fill:false},
+    {label:'Speed (x10 rpm)', data:tl.map(e=>parseFloat((e.speed/10).toFixed(1))), borderColor:'#8b5cf6', tension:.3, pointRadius:1, borderWidth:1.5, fill:false},
+    {label:'Torque (Nm)', data:tl.map(e=>e.torque), borderColor:'#ef4444', tension:.3, pointRadius:1, borderWidth:1.5, fill:false},
+    {label:'Tool Wear (min)', data:tl.map(e=>e.tool_wear), borderColor:'#f59e0b', tension:.3, pointRadius:1, borderWidth:1.5, borderDash:[3,3], fill:false}
   ]:[]);
   const trendLabels=tl?tl.map(e=>e.hour+'h'):[];
-  try{new Chart(document.getElementById('tc'),{type:'line',data:{labels:trendLabels,datasets:trendSets},options:trendOpts});}catch(e){}
-  try{new Chart(document.getElementById('tc2'),{type:'line',data:{labels:trendLabels,datasets:trendSets},options:trendOpts});}catch(e){}
+
+  try{
+    if(_chartTC) _chartTC.destroy();
+    _chartTC = new Chart(document.getElementById('tc'),{type:'line',data:{labels:trendLabels,datasets:trendSets},options:trendOpts});
+  }catch(e){}
+
+  try{
+    if(_chartTC2) _chartTC2.destroy();
+    _chartTC2 = new Chart(document.getElementById('tc2'),{type:'line',data:{labels:trendLabels,datasets:trendSets},options:trendOpts});
+  }catch(e){}
 }
 
 // Delay chart init until canvases are visible
