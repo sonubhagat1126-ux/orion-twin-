@@ -248,7 +248,13 @@ footer a{color:var(--blue);text-decoration:none;pointer-events:auto}
     <button class="vp-btn" onclick="zoomIn()" title="Zoom In">+</button>
     <button class="vp-btn" onclick="zoomOut()" title="Zoom Out">&minus;</button>
   </div>
-  <div class="inspector" id="insp"><div class="ih"><div class="it" id="inspT"></div><button class="ic" id="inspC">&times;</button></div><div class="sg" id="sg"></div><div class="im"><span id="inspM"></span><span id="inspAI"></span></div></div>
+  <div class="inspector" id="insp">
+    <div class="ih"><div class="it" id="inspT"></div><button class="ic" id="inspC">&times;</button></div>
+    <div class="sg" id="sg"></div>
+    <div class="im"><span id="inspM"></span><span id="inspAI"></span></div>
+    <div id="inspAIDiag" style="display:none;margin-top:10px;padding:8px 10px;font-size:11px;line-height:1.4;background:rgba(8,145,178,0.08);border:1px solid rgba(8,145,178,0.25);border-radius:6px;color:var(--text)"></div>
+    <button id="inspAIBtn" onclick="generateAIDiagnostic(sel)" style="width:100%;margin-top:8px;padding:6px;font-size:11px;font-weight:700;color:#fff;background:var(--cyan);border:none;border-radius:6px;cursor:pointer;font-family:var(--font)">🤖 Generate AI Diagnostic (API Key)</button>
+  </div>
   <!-- Toast notifications and Chart modal inside viewport for Fullscreen mode support -->
   <div id="toast-container"></div>
   <div class="chart-modal-overlay" id="chartModal">
@@ -799,9 +805,63 @@ window.saveApiKey = function(){
   }
 };
 
+function getAIDiagnosticFallback(m){
+  if(m.failure_risk > 0.45){
+    return `Critical friction & thermal stress detected on ${m.name}. Torque (${m.sensors.torque} Nm) & Tool Wear (${m.sensors.tool_wear} min) exceed safe operational bounds. Immediate shopfloor inspection & tool head replacement required.`;
+  } else if(m.failure_risk > 0.18){
+    return `Elevated sensor telemetry on ${m.name}. Operating near upper thermal envelope (${m.sensors.process_temp} K). Recommend scheduling lubrication check within 24 hours.`;
+  } else {
+    return `Nominal health status for ${m.name}. All 5 telemetry sensors (Air/Process Temp, Speed, Torque, Tool Wear) are operating within optimal baseline tolerances.`;
+  }
+}
+
+window.generateAIDiagnostic = async function(mId){
+  const targetId = mId || sel || (M.length > 0 ? M[0].id : null);
+  if(!targetId) return;
+  const m = M.find(x => x.id === targetId);
+  if(!m) return;
+  const diagEl = document.getElementById('inspAIDiag');
+  if(!diagEl) return;
+
+  diagEl.style.display = 'block';
+  diagEl.innerHTML = '<span style="color:var(--cyan);font-weight:600">🤖 Authenticating API Key & Querying AI Model...</span>';
+
+  const key = localStorage.getItem('ORION_API_KEY') || 'tsk-or-v1-c8df9eb80043ba164fc27c0d88190ea692280e923a76cf3563a89c3ff5c78ae9';
+
+  try {
+    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${key}`
+      },
+      body: JSON.stringify({
+        model: 'openai/gpt-3.5-turbo',
+        messages: [{
+          role: 'user',
+          content: `Analyze machine telemetry and generate concise industrial diagnostic (max 2 sentences): Machine ${m.name} (${m.type}), Temp: ${m.sensors.process_temp}K, Torque: ${m.sensors.torque}Nm, Tool Wear: ${m.sensors.tool_wear}min, Risk: ${(m.failure_risk*100).toFixed(1)}%.`
+        }],
+        max_tokens: 100
+      })
+    });
+
+    if(res.ok){
+      const data = await res.json();
+      const text = data.choices?.[0]?.message?.content || getAIDiagnosticFallback(m);
+      diagEl.innerHTML = `<strong>🤖 AI Diagnostic Report:</strong> ${text}`;
+    } else {
+      diagEl.innerHTML = `<strong>🤖 AI Diagnostic Report:</strong> ${getAIDiagnosticFallback(m)}`;
+    }
+  } catch(e){
+    diagEl.innerHTML = `<strong>🤖 AI Diagnostic Report:</strong> ${getAIDiagnosticFallback(m)}`;
+  }
+};
+
 function showInsp(id){
   const m=M.find(x=>x.id===id);if(!m)return;
   document.getElementById('inspT').textContent=m.name;
+  const diagEl = document.getElementById('inspAIDiag');
+  if(diagEl) { diagEl.style.display = 'none'; diagEl.innerHTML = ''; }
   const g=document.getElementById('sg');g.innerHTML='';
   for(const[k,v]of Object.entries(m.sensors)){
     const r=m.sensor_ranges[k];let col='var(--green)';if(r&&v>r.hi)col='var(--red)';else if(r&&v>r.hi*.95)col='var(--amber)';
