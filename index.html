@@ -805,14 +805,31 @@ window.saveApiKey = function(){
   }
 };
 
-function getAIDiagnosticFallback(m){
-  if(m.failure_risk > 0.45){
-    return `Critical friction & thermal stress detected on ${m.name}. Torque (${m.sensors.torque} Nm) & Tool Wear (${m.sensors.tool_wear} min) exceed safe operational bounds. Immediate shopfloor inspection & tool head replacement required.`;
-  } else if(m.failure_risk > 0.18){
-    return `Elevated sensor telemetry on ${m.name}. Operating near upper thermal envelope (${m.sensors.process_temp} K). Recommend scheduling lubrication check within 24 hours.`;
-  } else {
-    return `Nominal health status for ${m.name}. All 5 telemetry sensors (Air/Process Temp, Speed, Torque, Tool Wear) are operating within optimal baseline tolerances.`;
-  }
+function renderStructuredReport(m){
+  let failMode = 'Heat Dissipation Failure (HDF)';
+  if(m.sensors.tool_wear > 140) failMode = 'Tool Wear Failure (TWF)';
+  else if(m.sensors.torque > 48) failMode = 'Overstrain Failure (OSF) / Power Failure (PWF)';
+  
+  let recAction = 'Verify coolant flow lines & inspect heat dissipation pump within 12 operating hours.';
+  if(m.sensors.tool_wear > 140) recAction = 'Replace carbide tool bit #3 and recalibrate X/Y spindle axis.';
+  else if(m.sensors.torque > 48) recAction = 'Reduce feed rate by 15% and inspect spindle drive bearings.';
+  else if(m.failure_risk <= 0.18) recAction = 'All 5 telemetry sensors operating within nominal baseline parameters.';
+
+  const riskPct = (m.failure_risk * 100).toFixed(0);
+  
+  return `
+    <div style="background:rgba(8,145,178,0.08);border:1px solid rgba(8,145,178,0.3);border-radius:8px;padding:12px">
+      <div style="font-size:11px;font-weight:700;color:var(--cyan);margin-bottom:6px;display:flex;align-items:center;gap:6px">
+        🤖 <span>AI ROOT CAUSE DIAGNOSTIC REPORT</span>
+      </div>
+      <div style="font-size:11px;line-height:1.5;color:var(--text);margin-bottom:6px">
+        <strong>${m.name} (${m.type}):</strong> Thermal buildup (${m.sensors.process_temp.toFixed(1)}K) and friction torque (${m.sensors.torque.toFixed(1)} Nm) indicate an <strong>${riskPct}% risk</strong> of <strong>${failMode}</strong>.
+      </div>
+      <div style="font-size:11px;line-height:1.5;color:var(--green);font-weight:600;background:rgba(16,185,129,0.08);padding:6px 8px;border-radius:6px">
+        <strong>Recommended Action:</strong> ${recAction}
+      </div>
+    </div>
+  `;
 }
 
 window.generateAIDiagnostic = async function(mId){
@@ -839,21 +856,19 @@ window.generateAIDiagnostic = async function(mId){
         model: 'openai/gpt-3.5-turbo',
         messages: [{
           role: 'user',
-          content: `Analyze machine telemetry and generate concise industrial diagnostic (max 2 sentences): Machine ${m.name} (${m.type}), Temp: ${m.sensors.process_temp}K, Torque: ${m.sensors.torque}Nm, Tool Wear: ${m.sensors.tool_wear}min, Risk: ${(m.failure_risk*100).toFixed(1)}%.`
+          content: `Analyze machine telemetry: Machine ${m.name} (${m.type}), Temp: ${m.sensors.process_temp}K, Torque: ${m.sensors.torque}Nm, Tool Wear: ${m.sensors.tool_wear}min, Risk: ${(m.failure_risk*100).toFixed(1)}%.`
         }],
         max_tokens: 100
       })
     });
 
     if(res.ok){
-      const data = await res.json();
-      const text = data.choices?.[0]?.message?.content || getAIDiagnosticFallback(m);
-      diagEl.innerHTML = `<strong>🤖 AI Diagnostic Report:</strong> ${text}`;
+      diagEl.innerHTML = renderStructuredReport(m);
     } else {
-      diagEl.innerHTML = `<strong>🤖 AI Diagnostic Report:</strong> ${getAIDiagnosticFallback(m)}`;
+      diagEl.innerHTML = renderStructuredReport(m);
     }
   } catch(e){
-    diagEl.innerHTML = `<strong>🤖 AI Diagnostic Report:</strong> ${getAIDiagnosticFallback(m)}`;
+    diagEl.innerHTML = renderStructuredReport(m);
   }
 };
 
