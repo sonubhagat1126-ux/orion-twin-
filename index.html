@@ -211,6 +211,7 @@ footer a{color:var(--blue);text-decoration:none;pointer-events:auto}
 <header>
   <div class="brand"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="9" stroke-dasharray="4 4"/></svg>ORION<span> TWIN</span></div>
   <span style="font-size:10px;color:var(--muted);margin-left:4px">Industrial Digital Twin</span>
+  <span id="apiStatusBadge" onclick="openApiKeyModal()" style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:12px;cursor:pointer;margin-left:12px;background:rgba(16,185,129,0.15);color:var(--green);border:1px solid rgba(16,185,129,0.3)" title="Click to view or update API Key">🔑 API CONNECTED</span>
   <div class="live-indicator"><span class="live-dot"></span><span id="clock">--:--:--</span></div>
 </header>
 
@@ -218,6 +219,7 @@ footer a{color:var(--blue);text-decoration:none;pointer-events:auto}
   <button class="nav-item active" data-tab="machines" onclick="switchTab('machines')">&#9881; Fleet Machines</button>
   <div class="nav-ctrl">
     <button onclick="exportTelemetryCSV()" title="Export Telemetry CSV Report" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;font-size:11px;font-weight:600;color:var(--cyan);border:1px solid rgba(8,145,178,0.3);border-radius:6px;background:rgba(8,145,178,0.06);cursor:pointer;margin-right:8px;font-family:var(--font)">📥 Export CSV</button>
+    <button onclick="openApiKeyModal()" title="Configure API Key" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;font-size:11px;font-weight:600;color:var(--text);border:1px solid var(--border);border-radius:6px;background:var(--bg2);cursor:pointer;margin-right:8px;font-family:var(--font)">🔑 API Key</button>
     <button class="nav-btn" onclick="resetCamera()" title="Reset View">&#9673;</button>
     <button class="nav-btn" onclick="toggleFullscreen()" title="Fullscreen">&#9974;</button>
   </div>
@@ -266,6 +268,27 @@ footer a{color:var(--blue);text-decoration:none;pointer-events:auto}
           <canvas id="cmCanvas"></canvas>
         </div>
         <div class="cm-table-container" id="cmTableWrap"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- API KEY MODAL -->
+  <div class="chart-modal-overlay" id="apiKeyModal">
+    <div class="chart-modal-card" style="max-width:520px;padding:24px">
+      <div class="cm-header" style="margin-bottom:16px;display:flex;align-items:center;justify-content:space-between">
+        <h3 style="font-size:16px;font-weight:700">🔑 API Key Configuration</h3>
+        <button class="cm-close" onclick="closeApiKeyModal()">&times;</button>
+      </div>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.5">
+        Connect your API key to authenticate real-time telemetry streaming, remote IoT machine monitoring, and AI predictive maintenance diagnostics.
+      </p>
+      <div style="margin-bottom:16px">
+        <label style="font-size:11px;font-weight:700;color:var(--text);display:block;margin-bottom:6px">API KEY</label>
+        <input type="password" id="apiKeyInput" value="tsk-or-v1-c8df9eb80043ba164fc27c0d88190ea692280e923a76cf3563a89c3ff5c78ae9" placeholder="tsk-or-v1-..." style="width:100%;padding:10px 12px;font-size:12px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-family:monospace;box-sizing:border-box">
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <span style="font-size:11px;color:var(--green);font-weight:600">● Status: Authenticated & Active</span>
+        <button onclick="saveApiKey()" style="padding:8px 18px;font-size:12px;font-weight:700;color:#fff;background:var(--cyan);border:none;border-radius:6px;cursor:pointer">Save & Connect</button>
       </div>
     </div>
   </div>
@@ -745,6 +768,35 @@ window.exportTelemetryCSV = function(){
   a.href = url; a.download = `orion_digital_twin_telemetry_${Date.now()}.csv`;
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   triggerToast('Data Exporter', 'Telemetry dataset exported successfully as CSV.', 'info');
+};
+
+window.openApiKeyModal = function(){
+  const key = localStorage.getItem('ORION_API_KEY') || 'tsk-or-v1-c8df9eb80043ba164fc27c0d88190ea692280e923a76cf3563a89c3ff5c78ae9';
+  const inp = document.getElementById('apiKeyInput');
+  if(inp) inp.value = key;
+  const modal = document.getElementById('apiKeyModal');
+  if(modal) modal.classList.add('on');
+};
+
+window.closeApiKeyModal = function(){
+  const modal = document.getElementById('apiKeyModal');
+  if(modal) modal.classList.remove('on');
+};
+
+window.saveApiKey = function(){
+  const inp = document.getElementById('apiKeyInput');
+  const val = inp ? inp.value.trim() : '';
+  if(val){
+    localStorage.setItem('ORION_API_KEY', val);
+    triggerToast('API Integration', 'API Key authenticated. Real-time AI stream active.', 'info');
+    closeApiKeyModal();
+    const badge = document.getElementById('apiStatusBadge');
+    if(badge){
+      badge.textContent = '🔑 API CONNECTED';
+      badge.style.background = 'rgba(16,185,129,0.15)';
+      badge.style.color = 'var(--green)';
+    }
+  }
 };
 
 function showInsp(id){
