@@ -106,10 +106,15 @@ nav .nav-btn.on{background:var(--cyan);color:#fff;border-color:var(--cyan)}
 .inspector .ic{background:var(--bg);border:1px solid var(--border);color:var(--text2);width:44px;height:44px;border-radius:50%;cursor:pointer;font-size:20px;display:flex;align-items:center;justify-content:center;transition:all .12s}
 .inspector .ic:hover{background:var(--red);color:#fff;border-color:var(--red)}
 .sg{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-.sc{background:var(--bg);border-radius:var(--r);padding:10px 12px;text-align:center;border:1px solid var(--border)}
-.sc .sl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px}
-.sc .sv{font-size:16px;font-weight:700;margin:2px 0;font-variant-numeric:tabular-nums}
+.sc{background:var(--bg);border-radius:var(--r);padding:8px 8px;text-align:center;border:1px solid var(--border);position:relative;cursor:pointer;user-select:none;transition:all .15s}
+.sc:hover{border-color:var(--cyan);box-shadow:0 2px 8px rgba(8,145,178,.15)}
+.sc .sl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;font-weight:600}
+.sc .sv{font-size:16px;font-weight:800;margin:2px 0;font-variant-numeric:tabular-nums}
 .sc .su{font-size:9px;color:var(--dim)}
+.sc-ctrls{display:flex;justify-content:center;align-items:center;gap:6px;margin-top:5px}
+.sc-btn{width:22px;height:22px;border:1px solid var(--border);background:var(--bg2);color:var(--text);border-radius:50%;cursor:pointer;font-weight:800;font-size:13px;display:inline-flex;align-items:center;justify-content:center;transition:all .12s;line-height:1}
+.sc-btn:hover{background:var(--cyan);color:#fff;border-color:var(--cyan);transform:scale(1.1)}
+.sc-btn:active{transform:scale(0.92)}
 .im{display:flex;gap:16px;margin-top:10px;font-size:11px;color:var(--text2);align-items:center}
 .ai{background:linear-gradient(135deg,var(--purple),var(--blue));color:#fff;border-radius:4px;padding:2px 8px;font-size:10px;font-weight:700;letter-spacing:.3px}
 
@@ -597,16 +602,85 @@ function selM(id){
   requestAnimationFrame(anim);
 }
 
+function getStep(key){
+  if(key === 'speed') return 100;
+  if(key === 'air_temp' || key === 'process_temp') return 1.0;
+  if(key === 'torque') return 5.0;
+  if(key === 'tool_wear') return 15.0;
+  return 1;
+}
+
+window.adjSensor = function(mId, sKey, delta){
+  const m = M.find(x => x.id === mId);
+  if(!m) return;
+  const current = m.sensors[sKey] || 0;
+  let newVal = Math.max(0, current + delta);
+  if(sKey === 'speed') newVal = Math.max(0, Math.min(3500, newVal));
+  if(sKey === 'air_temp') newVal = Math.max(270, Math.min(350, newVal));
+  if(sKey === 'process_temp') newVal = Math.max(270, Math.min(360, newVal));
+  if(sKey === 'torque') newVal = Math.max(0, Math.min(120, newVal));
+  if(sKey === 'tool_wear') newVal = Math.max(0, Math.min(300, newVal));
+
+  m.sensors[sKey] = parseFloat(newVal.toFixed(1));
+  m.sensors.power = parseFloat(((m.sensors.speed * m.sensors.torque) / 9549.3).toFixed(1));
+
+  recalcMachine(m);
+  upML();
+  upRings();
+  showInsp(mId);
+  initCharts();
+
+  const r = m.sensor_ranges[sKey];
+  const unit = r ? r.unit : '';
+  const label = sKey.replace('_', ' ').toUpperCase();
+  addA(m.id, m.name, m.status === 'critical' ? 'critical' : m.status === 'warning' ? 'warning' : 'info', 
+       `Manual Override: ${label} set to ${m.sensors[sKey]} ${unit} (AI Risk: ${(m.failure_risk * 100).toFixed(1)}%)`);
+};
+
+window.promptSensor = function(mId, sKey){
+  if(sKey === 'power') return;
+  const m = M.find(x => x.id === mId);
+  if(!m) return;
+  const val = prompt(`Enter new value for ${sKey.replace('_',' ').toUpperCase()} (${m.sensors[sKey]}):`, m.sensors[sKey]);
+  if(val !== null && !isNaN(parseFloat(val))){
+    const num = parseFloat(val);
+    window.adjSensor(mId, sKey, num - m.sensors[sKey]);
+  }
+};
+
+function recalcMachine(m){
+  const fp = ND.failure_profiles[m.productType] || ND.failure_profiles['L'];
+  const s = m.sensors;
+  s.power = parseFloat(((s.speed * s.torque) / 9549.3).toFixed(1));
+  const rf = [];
+  if (s.tool_wear > 200) rf.push((s.tool_wear - 200) / 60 * 0.5);
+  if (s.air_temp > fp.air_temp_mean * 1.01) rf.push((s.air_temp - fp.air_temp_mean * 1.01) * 0.08);
+  if (s.process_temp > fp.process_temp_mean * 1.01) rf.push((s.process_temp - fp.process_temp_mean * 1.01) * 0.08);
+  if (s.torque > 55) rf.push((s.torque - 55) * 0.02);
+  if (s.speed > 2200 || s.speed < 1200) rf.push(0.25);
+
+  const baseRisk = rf.length > 0 ? rf.reduce((a,b)=>a+b, 0.02) : 0.01;
+  m.failure_risk = Math.min(0.98, Math.max(0.01, baseRisk));
+  const os = m.status;
+  m.status = m.failure_risk > 0.45 ? 'critical' : m.failure_risk > 0.18 ? 'warning' : 'normal';
+}
+
 function showInsp(id){
   const m=M.find(x=>x.id===id);if(!m)return;
   document.getElementById('inspT').textContent=m.name;
   const g=document.getElementById('sg');g.innerHTML='';
   for(const[k,v]of Object.entries(m.sensors)){
     const r=m.sensor_ranges[k];let col='var(--green)';if(r&&v>r.hi)col='var(--red)';else if(r&&v>r.hi*.95)col='var(--amber)';
-    g.innerHTML+='<div class="sc"><div class="sl">'+k.replace('_',' ')+'</div><div class="sv" style="color:'+col+'">'+(typeof v==='number'?v.toFixed(1):v)+'</div><div class="su">'+(r?r.unit:'')+'</div></div>';
+    const step = getStep(k);
+    const ctrls = k === 'power' ? '' : `
+      <div class="sc-ctrls">
+        <button class="sc-btn" onclick="event.stopPropagation();window.adjSensor('${m.id}','${k}',-${step})" title="Decrease ${k.replace('_',' ')}">&minus;</button>
+        <button class="sc-btn" onclick="event.stopPropagation();window.adjSensor('${m.id}','${k}',${step})" title="Increase ${k.replace('_',' ')}">+</button>
+      </div>`;
+    g.innerHTML+='<div class="sc" onclick="window.promptSensor(\''+m.id+'\',\''+k+'\')"><div class="sl">'+k.replace('_',' ')+'</div><div class="sv" style="color:'+col+'">'+(typeof v==='number'?v.toFixed(1):v)+'</div><div class="su">'+(r?r.unit:'')+'</div>'+ctrls+'</div>';
   }
   document.getElementById('inspM').textContent='Days since maint: '+m.days_since_maint+' \u00b7 Interval: '+m.maint_interval_days+'d';
-  document.getElementById('inspAI').innerHTML='<span class="ai">AI</span> Failure risk: '+(m.failure_risk*100).toFixed(1)+'%'+(m.failure_risk>.4?' \u2014 Schedule inspection':m.failure_risk>.15?' \u2014 Monitor closely':'');
+  document.getElementById('inspAI').innerHTML='<span class="ai">AI</span> Failure risk: '+(m.failure_risk*100).toFixed(1)+'%'+(m.failure_risk>.45?' \u2014 Schedule inspection':m.failure_risk>.18?' \u2014 Monitor closely':'');
   document.getElementById('insp').classList.add('on');
 }
 document.getElementById('inspC').addEventListener('click',()=>{sel=null;document.getElementById('insp').classList.remove('on');upML();});
