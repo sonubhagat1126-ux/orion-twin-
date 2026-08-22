@@ -972,8 +972,23 @@ function anim(ts,frame){
 rnd.setAnimationLoop(anim);
 
 window.addEventListener('keydown',e=>{
-  if(e.key==='Escape'){sel=null;document.getElementById('insp').classList.remove('on');upML();}
-  if(e.key==='r'){resetCamera();}
+  if(e.key==='Escape'){
+    if(document.getElementById('chartModal')&&document.getElementById('chartModal').classList.contains('on')){
+      closeChartModal();
+    }
+    sel=null;
+    const insp=document.getElementById('insp');
+    if(insp)insp.classList.remove('on');
+    upML();
+    setTimeout(resize,100);
+  }
+  if(e.key==='r'||e.key==='R'){resetCamera();}
+});
+
+document.addEventListener('fullscreenchange',()=>{
+  setTimeout(resize,50);
+  setTimeout(resize,200);
+  setTimeout(resize,400);
 });
 
 // Navigation
