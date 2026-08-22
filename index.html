@@ -321,11 +321,7 @@ footer a{color:var(--blue);text-decoration:none;pointer-events:auto}
 <script type="module">
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-let VRButton,XRControllerModelFactory;
-try{
-  VRButton=(await import('three/addons/webxr/VRButton.js')).VRButton;
-  XRControllerModelFactory=(await import('three/addons/webxr/XRControllerModelFactory.js')).XRControllerModelFactory;
-}catch(e){VRButton=null;XRControllerModelFactory=null;}
+
 document.title = 'Orion Digital Twin | Live';
 
 const ND = window.__ND__;
@@ -345,32 +341,19 @@ const rnd = new THREE.WebGLRenderer({antialias:true});
 rnd.setPixelRatio(Math.min(devicePixelRatio,2));
 rnd.shadowMap.enabled=true;rnd.shadowMap.type=THREE.PCFSoftShadowMap;
 rnd.toneMapping=THREE.ACESFilmicToneMapping;rnd.toneMappingExposure=1.0;
-rnd.xr.enabled=true;
 document.getElementById('viewport').appendChild(rnd.domElement);
 
-// VR Button with fallback
-let vrSupported=false;
-try{vrSupported=await navigator.xr?.isSessionSupported?.('immersive-vr')||false;}catch(e){}
 let fpMode = false;
 
 const vrBtn = document.createElement('button');
-vrBtn.style.cssText='position:absolute;bottom:60px;left:12px;z-index:45;padding:8px 14px;font-size:12px;border-radius:8px;border:1px solid var(--border);background:var(--bg2);color:var(--text);cursor:pointer;font-family:var(--font);box-shadow:var(--shadow);transition:all .12s';
-vrBtn.title='Enter VR or First-Person mode';
+vrBtn.style.cssText='position:absolute;bottom:16px;left:16px;z-index:45;padding:8px 14px;font-size:12px;border-radius:8px;border:1px solid var(--border);background:var(--bg2);color:var(--text);cursor:pointer;font-family:var(--font);box-shadow:var(--shadow);transition:all .12s';
+vrBtn.title='Enter First-Person Walk Mode';
+vrBtn.textContent='🎮 WALK MODE';
+vrBtn.onclick=()=>toggleFPMode();
 document.getElementById('viewport').appendChild(vrBtn);
 
-if(vrSupported){
-  vrBtn.textContent='\u{1F576} ENTER VR';
-  vrBtn.onclick=()=>rnd.xr.isPresenting?rnd.xr.getSession().end():enterVRFallback();
-}else{
-  vrBtn.textContent='\u{1F3AE} WALK MODE';
-  vrBtn.onclick=()=>toggleFPMode();
-}
-
-async function enterVRFallback(){
-  try{
-    const session=await navigator.xr.requestSession('immersive-vr',{optionalFeatures:['local-floor','bounded-floor']});
-    rnd.xr.setSession(session);
-  }catch(e){toggleFPMode();}
+function enterVRFallback(){
+  toggleFPMode();
 }
 
 // First-person walk mode
@@ -1089,7 +1072,7 @@ window.addEventListener('resize',resize);resize();
 
 let lt=0;
 function anim(ts,frame){
-  if(rnd.xr.isPresenting){
+  if(rnd.xr && rnd.xr.isPresenting){
     handleTeleport();
   }else if(fpMode){
     updateFPMode();
