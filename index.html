@@ -211,7 +211,6 @@ footer a{color:var(--blue);text-decoration:none;pointer-events:auto}
 <header>
   <div class="brand"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="9" stroke-dasharray="4 4"/></svg>ORION<span> TWIN</span></div>
   <span style="font-size:10px;color:var(--muted);margin-left:4px">Industrial Digital Twin</span>
-  <span id="apiStatusBadge" onclick="openApiKeyModal()" style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:12px;cursor:pointer;margin-left:12px;background:rgba(16,185,129,0.15);color:var(--green);border:1px solid rgba(16,185,129,0.3)" title="Click to view or update API Key">🔑 API CONNECTED</span>
   <div class="live-indicator"><span class="live-dot"></span><span id="clock">--:--:--</span></div>
 </header>
 
@@ -219,7 +218,6 @@ footer a{color:var(--blue);text-decoration:none;pointer-events:auto}
   <button class="nav-item active" data-tab="machines" onclick="switchTab('machines')">&#9881; Fleet Machines</button>
   <div class="nav-ctrl">
     <button onclick="exportTelemetryCSV()" title="Export Telemetry CSV Report" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;font-size:11px;font-weight:600;color:var(--cyan);border:1px solid rgba(8,145,178,0.3);border-radius:6px;background:rgba(8,145,178,0.06);cursor:pointer;margin-right:8px;font-family:var(--font)">📥 Export CSV</button>
-    <button onclick="openApiKeyModal()" title="Configure API Key" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;font-size:11px;font-weight:600;color:var(--text);border:1px solid var(--border);border-radius:6px;background:var(--bg2);cursor:pointer;margin-right:8px;font-family:var(--font)">🔑 API Key</button>
     <button class="nav-btn" onclick="resetCamera()" title="Reset View">&#9673;</button>
     <button class="nav-btn" onclick="toggleFullscreen()" title="Fullscreen">&#9974;</button>
   </div>
@@ -252,8 +250,7 @@ footer a{color:var(--blue);text-decoration:none;pointer-events:auto}
     <div class="ih"><div class="it" id="inspT"></div><button class="ic" id="inspC">&times;</button></div>
     <div class="sg" id="sg"></div>
     <div class="im"><span id="inspM"></span><span id="inspAI"></span></div>
-    <div id="inspAIDiag" style="display:none;margin-top:10px;padding:8px 10px;font-size:11px;line-height:1.4;background:rgba(8,145,178,0.08);border:1px solid rgba(8,145,178,0.25);border-radius:6px;color:var(--text)"></div>
-    <button id="inspAIBtn" onclick="generateAIDiagnostic(sel)" style="width:100%;margin-top:8px;padding:6px;font-size:11px;font-weight:700;color:#fff;background:var(--cyan);border:none;border-radius:6px;cursor:pointer;font-family:var(--font)">🤖 Generate AI Diagnostic (API Key)</button>
+    <div id="inspAIDiag" style="margin-top:10px"></div>
   </div>
   <!-- Toast notifications and Chart modal inside viewport for Fullscreen mode support -->
   <div id="toast-container"></div>
@@ -876,7 +873,7 @@ function showInsp(id){
   const m=M.find(x=>x.id===id);if(!m)return;
   document.getElementById('inspT').textContent=m.name;
   const diagEl = document.getElementById('inspAIDiag');
-  if(diagEl) { diagEl.style.display = 'none'; diagEl.innerHTML = ''; }
+  if(diagEl) { diagEl.style.display = 'block'; diagEl.innerHTML = renderStructuredReport(m); }
   const g=document.getElementById('sg');g.innerHTML='';
   for(const[k,v]of Object.entries(m.sensors)){
     const r=m.sensor_ranges[k];let col='var(--green)';if(r&&v>r.hi)col='var(--red)';else if(r&&v>r.hi*.95)col='var(--amber)';
